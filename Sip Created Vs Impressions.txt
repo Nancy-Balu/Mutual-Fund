@@ -1,0 +1,27 @@
+
+WITH sip_user as
+(
+SELECT trunc(created_ts) as SIP_Created_Date,
+client_code 
+FROM "dbo_wms_s3".sips
+where created_ts between to_date('01-01-2023','DD-MM-YYYY') and to_date('07-08-2023','DD-MM-YYYY')
+and exchange_sip_id <> '' and exchange_sip_id is not null
+and upper(status) not in ('SIP_REJECTED','SIP_FAILED') and id>0
+), click_imp as
+(
+SELECT
+ cast(api_timestamp as date) as click_date,client_id
+FROM
+    "dbo-angels"."clickstream"."db_dbo_clickstream_data_tablename_mf_clickstream_data"
+    where cast(api_timestamp as date) between to_date('01-01-2023','DD-MM-YYYY') and to_date('03-08-2023','DD-MM-YYYY')
+    and event_id IN('310.0.0.1.21','303.0.0.1.16')
+    and event_metadata like '%"investmentType":"SIP"%'
+)
+SELECT si.SIP_Created_Date, count(distinct si.client_code) as Unique_Sip_Created,count(distinct cl.client_id) as Unique_Impression_User from sip_user si
+LEFT JOIN
+click_imp cl
+on si.client_code=cl.client_id
+and si.SIP_Created_Date=cl.click_date
+group by si.SIP_Created_Date
+order by si.SIP_Created_Date
+    
