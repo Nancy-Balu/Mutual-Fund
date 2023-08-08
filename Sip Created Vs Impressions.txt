@@ -13,7 +13,7 @@ SELECT
  cast(api_timestamp as date) as click_date,client_id
 FROM
     "dbo-angels"."clickstream"."db_dbo_clickstream_data_tablename_mf_clickstream_data"
-    where cast(api_timestamp as date) between to_date('01-01-2023','DD-MM-YYYY') and to_date('03-08-2023','DD-MM-YYYY')
+    where cast(api_timestamp as date) between to_date('01-01-2023','DD-MM-YYYY') and to_date('07-08-2023','DD-MM-YYYY')
     and event_id IN('310.0.0.1.21','303.0.0.1.16')
     and event_metadata like '%"investmentType":"SIP"%'
 )
