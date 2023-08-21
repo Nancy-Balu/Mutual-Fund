@@ -1,0 +1,120 @@
+
+
+Create table nancy.MFCategoryFunnel As
+with MF_Cateogory as 
+(
+select  client_id ,api_timestamp,to_char(api_timestamp::timestamp,'YYYY-MM-DD') as DDate,event_metadata,event_id,
+case 
+WHEN event_id='308.0.0.1.2' THEN SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1)  
+WHEN event_id='308.0.0.6.13' THEN 'MostBoughtFund' end as category
+from  clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data 
+where  event_id IN ('308.0.0.1.2','308.0.0.6.13') and to_char(api_timestamp::timestamp,'YYYY-MM-DD')>='2023-07-01'), 
+
+
+orderpad as
+(
+  select  client_id ,api_timestamp,to_char(api_timestamp::timestamp,'YYYY-MM-DD') as DDate,event_metadata,event_id
+ from  clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data 
+ where  event_id ='310.0.0.1.0' and to_char(api_timestamp::timestamp,'YYYY-MM-DD') >= '2023-07-01'
+),
+Order_Summary as 
+(
+     select  client_id ,api_timestamp,to_char(api_timestamp::timestamp,'YYYY-MM-DD') as DDate,event_metadata,event_id
+ from  clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data 
+ where  event_id ='310.0.0.1.21' and to_char(api_timestamp::timestamp,'YYYY-MM-DD') >= '2023-07-01'
+),
+DirectPay as 
+(
+    select  client_id ,api_timestamp,to_char(api_timestamp::timestamp,'YYYY-MM-DD') as DDate,event_metadata,event_id
+ from  clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data 
+ where  event_id ='310.0.0.1.5' and to_char(api_timestamp::timestamp,'YYYY-MM-DD') >= '2023-07-01'
+),
+ChangePay as 
+(
+    select  client_id ,api_timestamp,to_char(api_timestamp::timestamp,'YYYY-MM-DD') as DDate,event_metadata,event_id
+ from  clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data 
+ where  event_id ='310.0.0.1.8' and to_char(api_timestamp::timestamp,'YYYY-MM-DD') >= '2023-07-01'
+)
+---Category-----
+SELECT count(distinct client_id) ,
+        case
+    WHEN event_id='308.0.0.1.0' THEN 'MF_HomePage'
+    WHEN event_id='308.0.0.6.13' THEN 'Most_Bought_Fund'
+    WHEN event_id='308.0.0.1.2' THEN SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1)
+    END AS Step_Name ,
+     to_char(api_timestamp::timestamp,'YYYY-MM-DD') as  Visit_Date 
+     from 
+clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data
+where event_id in('308.0.0.1.0','308.0.0.6.13','308.0.0.1.2')
+and to_char(api_timestamp::timestamp,'YYYY-MM-DD') >='2023-07-01'
+group by 2,3
+
+union all
+---Orderpad---
+ Select count(distinct client_id),'orderpad'||'_'||category as Step_Name,DDate AS Visit_Date 
+ from
+(
+Select cs.client_id as cid,cs.api_timestamp,cs.category,ord.client_id,ord.ddate,ord.api_timestamp,
+row_number() over(partition by cs.client_id order by cs.api_timestamp desc) as rn
+from
+ MF_Cateogory as cs 
+ INNER JOIN
+ orderpad as ord 
+ on cs.client_id=ord.client_id
+ and cs.DDate=ord.ddate and cs.api_timestamp<=ord.api_timestamp
+)
+where rn=1
+ group by 2,3
+
+union all 
+
+----order_summary----
+Select count(distinct client_id),'OrderSummary'||'_'||category as Step_Name,DDate AS Visit_Date 
+ from
+(
+Select cs.client_id as cid,cs.api_timestamp,cs.category,ors.client_id,ors.ddate,ors.api_timestamp,
+row_number() over(partition by cs.client_id order by cs.api_timestamp desc) as rn
+from
+MF_Cateogory as cs 
+INNER JOIN
+Order_Summary as ors
+on cs.client_id=ors.client_id
+and cs.DDate=ors.ddate and cs.api_timestamp<=ors.api_timestamp
+)
+where rn=1
+group by 2,3
+
+union all
+
+-----Direct Pay---------
+Select count(distinct client_id),'b.DirectPay'||'_'||category as Step_Name,DDate AS Visit_Date 
+ from
+(
+Select cs.client_id as cid,cs.api_timestamp,cs.category,dd.client_id,dd.ddate,dd.api_timestamp,
+row_number() over(partition by cs.client_id order by cs.api_timestamp desc) as rn
+from
+MF_Cateogory as cs 
+INNER JOIN
+DirectPay as dd
+on cs.client_id=dd.client_id
+and cs.DDate=dd.ddate and cs.api_timestamp<=dd.api_timestamp
+)
+where rn=1
+group by 2,3
+
+union all
+-----ChangePay---------
+Select count(distinct client_id),'a.ChangePay'||'_'||category as Step_Name,DDate AS Visit_Date 
+ from
+(
+Select cs.client_id as cid,cs.api_timestamp,cs.category,cp.client_id,cp.ddate,cp.api_timestamp,
+row_number() over(partition by cs.client_id order by cs.api_timestamp desc) as rn
+from
+MF_Cateogory as cs 
+INNER JOIN
+Changepay as cp
+on cs.client_id=cp.client_id
+and cs.DDate=cp.ddate and cs.api_timestamp<=cp.api_timestamp
+)
+where rn=1
+group by 2,3
