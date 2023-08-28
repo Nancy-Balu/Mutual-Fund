@@ -1,0 +1,7 @@
+select distinct ord.client_code,sc.scheme_type,ord.Investment_type ,ord.user_type,ord.amount,created_ts::timestamp::date as DDate 
+from  "dbo-angels"."dbo_wms_s3"."scheme_plan" sc
+INNER JOIN 
+"dbo_wms_s3".orders ord on sc.scheme_code=ord.scheme_code
+where upper(sc.scheme_Type) IN('LIQUID','EQUITY','DEBT')  and 
+ord.Investment_type IN('REDEEM','SIP','XSIP','LUMPSUM') and
+upper(status) not in ('SIP_REJECTED','SIP_FAILED') and SUBSTRING(created_ts::date, 1, 4 ) = '2023' and SUBSTRING(created_ts, 6, 2 ) in ('07') 
