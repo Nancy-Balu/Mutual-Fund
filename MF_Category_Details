@@ -16,9 +16,6 @@ WHEN event_id='308.0.0.6.4' THEN 'StoryFund'
 WHEN event_id IN('309.0.0.1.6','309.0.0.1.2') THEN 'SipBook'
 WHEN event_id='306.0.0.13.29' THEN 'FundforYou'
 WHEN event_id='306.0.0.13.21' THEN 'InvestMore'
---WHEN event_id='308.0.0.2.4' THEN 'ExploreMutualFunds'
---WHEN event_id IN('301.0.0.1.12','301.0.0.1.14') THEN 'Invest'
---WHEN event_id='301.0.0.1.1' THEN 'ChartTimeIntervalSelection'
 WHEN event_id IN('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0') THEN 'Search'
 WHEN event_id ='310.0.0.1.0'  THEN 'OrderPad' 
 WHEN event_id ='310.0.0.1.21' THEN 'OrderSummary'
@@ -47,6 +44,4 @@ select * from MF_Category mfc
 LEFT JOIN client_kyc kyc on mfc.client_id=kyc.party_code
 
 
---select * from nancy.mf_category_details
 
---drop table nancy.mf_category_details
