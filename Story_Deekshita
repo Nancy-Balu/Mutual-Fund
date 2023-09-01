@@ -1,0 +1,15 @@
+with client_invest as
+(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date,CAST(created_ts as date) as dt,platform, created_ts,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM dbo_wms.sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts>='2023-05-01'),
+ raw_data1 as
+(
+SELECT distinct client_id AS clients, JSON_EXTRACT_PATH_TEXT(event_metadata, 'StoryTitle') AS stories, dt
+FROM clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data
+WHERE event_id = '308.0.0.6.8' AND dt >= '2023-08-01'
+GROUP BY client_id, stories, dt
+)
+select count(distinct a.clients) as clients,a.dt::date,a.stories,'Step2' as steps from raw_data1 a
+join client_invest b on a.clients=b.client_id
+group by 2,3
+union all
+select count(distinct clients) as clients,dt::date,stories,'Step1' as steps from raw_data1
+group by 2,3
