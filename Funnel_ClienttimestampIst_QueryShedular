@@ -22,7 +22,7 @@ PaymentInitiation as(
 ---Category-----
 SELECT count(distinct client_id) as Distinct_users,cli_timestamp::date as  Visit_Date,All_category AS Category_Name, All_category AS Step_Name ,Category_Details AS CategoryPart_Name,client_type, Age_bucket    
 from nancy.MF_Category_Details
-where category_details in('MF_HomePage','Category') and cli_timestamp::date>='2023-07-01' and cli_timestamp::date<current_date
+where category_details in('MF_HomePage','Category') and cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date
 group by 2,3,4,5,6,7
 
 union all
