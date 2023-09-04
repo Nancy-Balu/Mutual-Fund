@@ -2,22 +2,22 @@ create table nancy.funnel_clienttimestampist as
 
 with MF_category as (
     SELECT *,case when event_id='308.0.0.1.2' then 'CategoryFund' else all_category end as Fund_Details,cli_timestamp::date as DDate
-    FROM nancy.MF_Category_Details where category_details in('Category') and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date-1
+    FROM nancy.MF_Category_Details where category_details in('Category') and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date
 ),
 orderpad as(
-    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('OrderPad') and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date-1
+    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('OrderPad') and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date
 ),
 order_summary as(
-    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date-1
+    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date
 ),
 DirectPay as(
-    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('DirectPay')  and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date-1
+    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('DirectPay')  and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date
 ),
 ChangePay as(
-    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('ChangePay')  and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date-1
+    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('ChangePay')  and  cli_timestamp::date=current_date-1 and cli_timestamp::date<current_date
 ),
 PaymentInitiation as(
-    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('DirectPay','ChangePay') and  cli_timestamp::date=current_date-1' and cli_timestamp::date<current_date-1
+    SELECT *,cli_timestamp::date as DDate FROM nancy.MF_Category_Details where category_details in('DirectPay','ChangePay') and  cli_timestamp::date=current_date-1' and cli_timestamp::date<current_date
 )
 ---Category-----
 SELECT count(distinct client_id) as Distinct_users,cli_timestamp::date as  Visit_Date,All_category AS Category_Name, All_category AS Step_Name ,Category_Details AS CategoryPart_Name,client_type, Age_bucket    
