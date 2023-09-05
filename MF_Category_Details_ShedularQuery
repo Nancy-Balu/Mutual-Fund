@@ -5,7 +5,7 @@ else '50+' end as Age_bucket from(
 (SELECT distinct party_code as party_code,case when b2c='Y' then 'B2C' when b2c='N' then 'B2B' else null end as Client_type,datediff(year,cast(birthdate as date),current_date) as age  FROM "dbo-angels"."product_analytics"."sn_clientkyc" 
 ))),
  MF_Category as (
-select  client_id,api_timestamp,client_timestamp,(timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as cli_timestamp,event_metadata,event_id,
+select  dt,client_id,api_timestamp,client_timestamp,(timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as cli_timestamp,event_metadata,event_id,
 case  
 WHEN event_id='308.0.0.1.0' THEN 'MF_HomePage'
 WHEN event_id='308.0.0.1.2' THEN SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1)
