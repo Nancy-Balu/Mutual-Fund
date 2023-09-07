@@ -110,4 +110,4 @@ and cs.DDate=cp.ddate and cs.cli_timestamp<=cp.cli_timestamp
 group by 2,3,4,5,6,7
 
 
---drop table nancy.funnel_clienttimestampist
+
