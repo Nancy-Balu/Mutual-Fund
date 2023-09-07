@@ -1,4 +1,4 @@
-create table nancy.MF_Category_Details as
+create table dbo_wms.MF_Category_Details as
 
 with client_kyc as (
 select party_code,case  when Client_type='B2B' then 'B2B' when Client_type='B2C' then 'B2C'else null end as Client_type,
