@@ -1,0 +1,22 @@
+-----Seach users, SIP created, AVG Amount, 
+SELECT
+    extract(month FROM clc.api_timestamp::date) AS Month,
+    COUNT(DISTINCT clc.client_id) AS Search_clients,
+    COUNT(DISTINCT case when ord.investment_Type='SIP'and ord.status='ORDER_COMPLETE' and payemt_status='SUCCESS'  then ord.client_code END ) AS Created_Sip_user,
+    COUNT(DISTINCT case when ord.investment_Type='LUMPSUM' and ord.status='ORDER_COMPLETE' and payemt_status='SUCCESS'then ord.client_code END) AS Created_Lumpsum_user,
+    SUM(case when ord.investment_Type='SIP'and ord.status='ORDER_COMPLETE'and payemt_status='SUCCESS' then ord.amount END ) AS SIP_Amount,
+    SUM(case when ord.investment_Type='LUMPSUM' and ord.status='ORDER_COMPLETE' and payemt_status='SUCCESS' then ord.amount END) AS Lumpsum_Amount,
+    SIP_Amount/COUNT( case when ord.investment_Type='SIP'and ord.status='ORDER_COMPLETE' and payemt_status='SUCCESS' then ord.client_code END ) AS SIP_AvgAmount,
+    Lumpsum_Amount/COUNT( case when ord.investment_Type='LUMPSUM' and ord.status='ORDER_COMPLETE' and payemt_status='SUCCESS' then ord.client_code END) AS Lumpsum_AvgAmount
+FROM
+    "dbo-angels"."clickstream_internal"."mf_clickstream_data" clc
+LEFT JOIN
+    "dbo_wms".orders ord
+ON
+    clc.client_id = ord.client_code
+WHERE
+    clc.event_id IN ('300.0.0.1.3', '300.0.0.1.2', '300.0.0.1.1', '300.0.0.1.0') 
+
+GROUP BY
+    1; -- Group by the first column in the SELECT clause, which is the Month
+
