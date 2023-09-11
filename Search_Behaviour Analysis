@@ -84,22 +84,33 @@ where event_id='300.0.0.1.3'
 group by 1,2
 order by 2 desc
 
----------
 
-SELECT api_timestamp::Date,
-count(distinct (CASE WHEN event_id = '300.0.0.1.0' THEN client_id ELSE NULL END)) AS clicked_on_search,
-count(distinct(CASE WHEN event_id = '300.0.0.1.3' THEN client_id ELSE NULL END)) AS clicked_on_keywordsearched,
-count(distinct (CASE WHEN event_id = '300.0.0.1.2' THEN client_id ELSE NULL END)) AS clicked_on_fundname,
-clicked_on_keywordsearched-clicked_on_fundname as notclicked_on_fundname
-FROM "dbo-angels"."clickstream_internal"."mf_clickstream_data" where event_id IN('300.0.0.1.0','300.0.0.1.2','300.0.0.1.3')
-group by 1
-order by 1
 
 ----------------------Search click but fundname not selected
-SELECT
-distinct client_id,api_timestamp::date,event_metadata
-FROM "dbo-angels"."clickstream_internal"."mf_clickstream_data"
-WHERE event_id IN ('300.0.0.1.3') AND (client_id) NOT IN (SELECT DISTINCT client_id FROM "dbo-angels"."clickstream_internal"."mf_clickstream_data" WHERE event_id = '300.0.0.1.2')
+with raw_data1 as 
+(
+select distinct client_id as clients,dt,  'Step1' as steps, 'Search_click' as step_name,(timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as cli_timestamp from "dbo-angels"."clickstream_internal"."mf_clickstream_data"  where   event_id in ('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0') and dt >='2023-09-01'
+union all
+select  distinct client_id as clients,dt, 'Step2' as steps, 'Keyword_Search'as step_name, (timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as cli_timestamp from  "dbo-angels"."clickstream_internal"."mf_clickstream_data" where   event_id in ('300.0.0.1.3') and client_id in (select  distinct client_id from "dbo-angels"."clickstream_internal"."mf_clickstream_data"  where   event_id in ('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0') and dt >='2023-09-01') and dt >='2023-09-01'
+union all
+select distinct client_id as clients, dt, 'Step3' as steps, 'FundDetails_Clicked' as step_name,(timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as cli_timestamp  from "dbo-angels"."clickstream_internal"."mf_clickstream_data" where event_id in ('300.0.0.1.2') and client_id in(select distinct client_id as clients from "dbo-angels"."clickstream_internal"."mf_clickstream_data" where   event_id in ('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0') and client_id in(select  distinct client_id from "dbo-angels"."clickstream_internal"."mf_clickstream_data"  where event_id in ('300.0.0.1.3') and dt >='2023-09-01') and dt >='2023-09-01') and client_id is not null and dt >='2023-09-01'
+union all
+select distinct client_id as clients, dt, 'Step3' as steps, 'FundDetails_NotClicked' as step_name,(timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as cli_timestamp  from "dbo-angels"."clickstream_internal"."mf_clickstream_data" where event_id in ('300.0.0.1.3') and client_id not in (select  distinct client_id from "dbo-angels"."clickstream_internal"."mf_clickstream_data"  where event_id in ('300.0.0.1.2') and dt >='2023-09-01') and dt >='2023-09-01'
+
+)
+
+select count(distinct clients) as clients,step_name
+ ,cli_timestamp::date from raw_Data1 where cli_timestamp::date>='2023-09-04' and cli_timestamp::date<current_date
+group by 2,3
 
 
-
+-----------Keywords_Details--------
+select
+SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1) as KeyWordSearched,
+count(keywordSearched),
+date_trunc('month',cast(dt as date)) as Month,
+ROW_NUMBER() OVER (PARTITION BY date_trunc('month',cast(dt as date)) ORDER BY COUNT(*) DESC) AS keyword_rank
+from "dbo-angels"."clickstream_internal"."mf_clickstream_data"
+where event_id='300.0.0.1.3'
+group by 1,3
+order by 3,2 desc
