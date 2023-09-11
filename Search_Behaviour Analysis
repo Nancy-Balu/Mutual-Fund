@@ -120,3 +120,10 @@ from "dbo-angels"."clickstream_internal"."mf_clickstream_data"
 where event_id='300.0.0.1.3'
 group by 1,3
 order by 3,2 desc
+
+----Keyworddetails for notselectedfund
+select SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1) as KeyWordSearched,
+count(keywordSearched),
+date_trunc('month',cast(dt as date)) as Month,
+ROW_NUMBER() OVER (PARTITION BY date_trunc('month',cast(dt as date)) ORDER BY COUNT(*) DESC) AS keyword_rank from "dbo-angels"."clickstream_internal"."mf_clickstream_data" where event_id in ('300.0.0.1.3') and client_id not in (select  distinct client_id from "dbo-angels"."clickstream_internal"."mf_clickstream_data"  where event_id in ('300.0.0.1.2') and dt >='2023-09-01') and dt >='2023-09-01'
+group by 1,3
