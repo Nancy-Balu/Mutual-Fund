@@ -1,0 +1,13 @@
+create table nancy.keywordsearch_funnel as
+SELECT ((timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date  as cli_timestamp_ist,
+date_trunc('month',cli_timestamp_ist::date) as Month,
+count(distinct (CASE WHEN event_id IN( '300.0.0.1.0','300.0.0.1.1','300.0.0.1.2','300.0.0.1.3') THEN client_id ELSE NULL END)) AS clicked_on_search,
+count(distinct(CASE WHEN event_id = '300.0.0.1.3' THEN client_id ELSE NULL END)) AS clicked_on_keywordsearched,
+count(distinct (CASE WHEN event_id = '300.0.0.1.2' THEN client_id ELSE NULL END)) AS clicked_on_fundname,
+clicked_on_keywordsearched-clicked_on_fundname as notclicked_on_fundname
+FROM clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data where event_id IN('300.0.0.1.0','300.0.0.1.1','300.0.0.1.2','300.0.0.1.3')
+and dt>='2023-07-01' and cli_timestamp_ist::date>='2023-07-01' and cli_timestamp_ist<current_date
+group by 1,2
+order by 1
+
+--drop table nancy.keywordsearch_funnel where cli_timestamp_ist is null
