@@ -1,0 +1,11 @@
+
+SELECT 
+date_trunc('month',api_timestamp::date) as Month,
+count(distinct (CASE WHEN event_id IN( '300.0.0.1.0','300.0.0.1.1','300.0.0.1.2','300.0.0.1.3') THEN client_id ELSE NULL END)) AS clicked_on_search,
+count(distinct(CASE WHEN event_id = '300.0.0.1.3' THEN client_id ELSE NULL END)) AS clicked_on_keywordsearched,
+count(distinct (CASE WHEN event_id = '300.0.0.1.2' THEN client_id ELSE NULL END)) AS clicked_on_fundname,
+clicked_on_keywordsearched-clicked_on_fundname as notclicked_on_fundname
+FROM clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data where event_id IN('300.0.0.1.0','300.0.0.1.1','300.0.0.1.2','300.0.0.1.3')
+and dt = current_date -1
+group by 1
+order by 1
