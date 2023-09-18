@@ -1,4 +1,9 @@
-
+delete from
+    dbo_wms.keywordsearch_funnel
+where
+    dt = current_date -1;
+insert into
+    dbo_wms.keywordsearch_funnel
 SELECT 
 date_trunc('month',api_timestamp::date) as Month,
 count(distinct (CASE WHEN event_id IN( '300.0.0.1.0','300.0.0.1.1','300.0.0.1.2','300.0.0.1.3') THEN client_id ELSE NULL END)) AS clicked_on_search,
