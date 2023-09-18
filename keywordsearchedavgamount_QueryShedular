@@ -1,6 +1,6 @@
 with clickstream as (
     select * from clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data where event_id IN('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0','300.0.0.1.2','301.0.0.1.14')
-and dt>='2023-01-01'
+and  dt = current_date -1
 ),
 raw_data1 as 
 (
