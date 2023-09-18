@@ -1,7 +1,7 @@
 delete from
     dbo_wms.keywordsearch_funnel
 where
-    dt = current_date -1;
+    dt = current_date-1;
 insert into
     dbo_wms.keywordsearch_funnel
 SELECT 
