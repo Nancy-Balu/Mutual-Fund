@@ -1,4 +1,4 @@
-create table nancy.keywordsearched as
+create table dbo_wms.keywordsearched as
 
 with keywords as
 (
