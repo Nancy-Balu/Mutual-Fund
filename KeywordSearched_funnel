@@ -1,4 +1,4 @@
-create table nancy.keywordsearch_funnel as
+create table dbo_wms.keywordsearch_funnel as
 
 SELECT 
 date_trunc('month',api_timestamp::date) as Month,
