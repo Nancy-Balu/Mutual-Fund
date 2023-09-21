@@ -34,7 +34,7 @@ left join db_online_engine_rev.sn_clientkyc b
 on a.client_id =b.party_code),
 raw_data3 as 
 (
-select *,case when datediff(day,cast(activefrom as date), current_date) <=30 then 'New Users' else 'Old Users' end new_old_users from raw_data2),
+select *,case when datediff(day,cast(activefrom as date), dt::date) <=30 then 'New Users' else 'Old Users' end new_old_users from raw_data2),
 lump_sum as 
 (
  select *,date_trunc('month',CAST(created_ts as date)) as Mt from dbo_wms_s3.orders where
