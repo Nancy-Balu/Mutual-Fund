@@ -1,0 +1,50 @@
+with Stock_Clicked_user as 
+(
+select client_id,client_timestamp,dt,dt::date as dt1, 'Step1' as steps, 'StockDetails_Click' as step_name from "dbo-angels"."clickstream_internal"."dp_spark_clickstream_data"  where   event_id in ('5.0.0.2.0') and dt >='2023-09-13' 
+union all
+select client_id,client_timestamp,dt,client_timestamp::date as dt1,'Step2' as steps, 'StockDetails_TopMFInvested_Click' as step_name from "dbo-angels"."clickstream_internal"."dp_spark_clickstream_data"  where   event_id in ('5.0.0.40.1') and dt >='2023-09-13'
+),
+MFclickstream_user as
+(
+select *, (timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as  client_timestamp_ist, client_timestamp_ist::date as dt1
+from "dbo-angels"."clickstream_internal"."mf_clickstream_data" where substring(event_id,1,3) in ('301') and dt>='2023-09-13'
+),
+FunDetails_Impression as(
+select distinct a.client_id,a.dt1 from Stock_Clicked_user a
+ join MFclickstream_user b on a.client_id=b.client_id
+ where steps='Step2' and  datediff(minute,b.client_timestamp_ist::timestamp,a.client_timestamp::timestamp)<=1
+),
+MFInvestClick as 
+(
+ select distinct client_id as clients, dt::date, 'Step3' as steps, 'MF_invest_Click' as step_name  from "dbo-angels"."clickstream_internal"."mf_clickstream_data" where event_id in ('301.0.0.1.14') and (client_id,dt) in(select distinct client_id,dt1 as clients from FunDetails_Impression where dt>='2023-09-13')   
+),
+client_invest as (
+    (SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date,CAST(created_ts as date) as dt,platform, created_ts,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM dbo_wms_s3.sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts>='2023-09-13')
+),
+clients_invested_final as 
+(
+select distinct b.client_id,b.dt from MFInvestClick a
+left join client_invest b on a.clients=b.client_id
+and a.dt=b.dt
+where a.steps='Step3'),
+
+raw_data3 as 
+(
+select  count(distinct client_id) as clients,CAST(dt1 as date) as dt,'Step1' as steps, '01_StockDetails_Users' as step_name  from Stock_Clicked_user where steps='Step1'
+group by 2
+union all    
+select  count(distinct client_id) as clients,CAST(dt1 as date) as dt,'Step2' as steps, '02_StockDetails_TopMFInvested_Click' as step_name  from Stock_Clicked_user where steps='Step2'
+group by 2
+union all
+select  count(distinct client_id) as clients,CAST(dt1 as date) as dt,'Step3' as steps, '03_MF_FundDetails_impressions' as step_name  from FunDetails_Impression
+group by 2
+union all
+select  count(distinct clients) as clients,CAST(dt as date) as dt,'Step4' as steps, '04_MF_invest_Click' as step_name  from MFInvestClick
+where steps='Step3'
+group by 2
+union all
+select  count(distinct client_id) as clients,CAST(dt as date) as dt,'Step5' as steps, '05_MF_SIP Order_Paid' as step_name  from clients_invested_final
+group by 2)
+
+select * from raw_data3 where dt >='2023-09-13'  
+
