@@ -1,7 +1,7 @@
 delete from
     dbo_wms.keywordsearch_funnel
 where
-    dt = current_date-1;
+    dt >= current_date-30 and dt<current_date;
 insert into
     dbo_wms.keywordsearch_funnel
 SELECT 
@@ -11,6 +11,6 @@ count(distinct(CASE WHEN event_id = '300.0.0.1.3' THEN client_id ELSE NULL END))
 count(distinct (CASE WHEN event_id = '300.0.0.1.2' THEN client_id ELSE NULL END)) AS clicked_on_fundname,
 clicked_on_keywordsearched-clicked_on_fundname as notclicked_on_fundname
 FROM "dbo-angels"."clickstream_internal"."mf_clickstream_data" where event_id IN('300.0.0.1.0','300.0.0.1.1','300.0.0.1.2','300.0.0.1.3')
-and dt = current_date -1
+and dt >= current_date-30 and dt<current_date
 group by 1
 order by 1
