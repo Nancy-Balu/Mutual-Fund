@@ -1,6 +1,6 @@
 
 delete from dbo_wms.mf_modified where dt= current_date-1
-insert into  abo_wms.mf_modified
+insert into  abo_wms.mf_modified as
 with raw_data1 as 
 (
 select * from dbo_wms.spark_users_all where dt = current_date-1,
