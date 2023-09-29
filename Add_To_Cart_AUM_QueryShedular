@@ -1,1 +1,18 @@
 
+with raw_data1 as 
+(select * from dbo_wms.Master_Add_to_Cart where stepname='4_Add_to_cart_successfully'),
+
+raw_data2 as 
+(
+select distinct a.visit_date,a.client_code,a.client_type,a.platform,a.age_bucket,b.payment_status,b.payment_mode,c.investment_type,c.amount,c.id as orders  from raw_data1 a
+join dbo_wms_s3.cart_item_orders b on a.client_code=b.client_code
+join  dbo_wms_s3.cart_items c on a.client_code=c.client_code)
+
+select count(DISTINCT orders) as Value, visit_date, investment_type, '01_Total_Sip' as Steps,client_type,age_bucket,platform from raw_data2 where lower(payment_status)='success' and visit_Date>='2023-06-01'
+group by 2,3,4,5,6,7
+union all
+select sum(Amount) as Value,  visit_date, investment_type, '02_Total_AUM' as Steps,client_type,age_bucket,platform  from raw_data2 where lower(payment_status)='success' and visit_Date>='2023-06-01'
+group by 2,3,4,5,6,7
+union all 
+select  sum(amount)/count(orders) as Value, visit_date, investment_type, '03_Avg_Amount' as Steps,client_type,age_bucket,platform  from raw_data2 where lower(payment_status)='success' and visit_Date>='2023-06-01'
+group by 2,3,4,5,6,7
