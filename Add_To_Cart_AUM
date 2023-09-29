@@ -1,4 +1,4 @@
-create table AddtocartAUM as 
+create table dbo.wms.AddtocartAUM as 
 
 with raw_data1 as 
 (select * from dbo_wms.Master_Add_to_Cart where stepname='4_Add_to_cart_successfully'),
