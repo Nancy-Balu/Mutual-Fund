@@ -28,7 +28,7 @@ sn_clientkyc_data b on a.spark_users =b.party_code),
 
 
 client_invested as 
-(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date, cast(created_ts as date) dt, status,platform, payment_status, first_order,sip_type, '2.0' version FROM dbo_wms_s3.sips where id>0 and (exchange_sip_id <> '' and exchange_sip_id is not null and dt= current_date-1 and status not in ('SIP_REJECTED','SIP_FAILED'))),
+(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date, cast(created_ts as date) dt, status,platform, payment_status, first_order,sip_type, '2.0' version FROM dbo_wms_s3.sips where id>0 and (exchange_sip_id <> '' and exchange_sip_id is not null and created_ts::timestamp::date= current_date-1 and status not in ('SIP_REJECTED','SIP_FAILED'))),
 
 raw_data2 as 
 (
@@ -42,9 +42,9 @@ raw_data3 as
 select *,case when datediff(day,cast(activefrom as date), dt::date) <=30 then 'New Users' else 'Old Users' end new_old_users from raw_data2),
 lump_sum as 
 (
- select *,created_ts::timestamp::date as dt from dbo_wms_s3.orders where
+ select * from dbo_wms_s3.orders where
     investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED'
-    and id >0 and dt=current_Date-1,
+    and id >0 and created_ts::timestamp::date=current_Date-1,
 lump_sum_b2b_b2c as 
 (select a.*,b.b2c from lump_sum a left join sn_clientkyc_data b 
 on a.client_code =b.party_code)
