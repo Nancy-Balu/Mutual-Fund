@@ -1,4 +1,4 @@
-delete from dbo_wms.mf_modified_monthly where dt>=current_Date-7 and dt<current_date;
+delete from dbo_wms.mf_modified_monthly where Mt>=current_Date-7 and dt<current_date;
 insert into dbo_wms.mf_modified_monthly as
 
 with raw_data1 as 
