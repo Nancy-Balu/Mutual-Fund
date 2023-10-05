@@ -1,0 +1,6 @@
+create dbo.wms.MF_Protfolio as
+select a.dt as Date,a.client_code,a.invested_value as Total_Buy_value,a.current_value as Total_current_value,count(distinct b.isin) as No_of_distinct_MFs ,a.inserted_date::date as updated_on from dbo_wms_s3.portfolio a
+LEFT JOIN dbo_wms_s3.portfolio_holding b
+on a.client_code=b.client_code and a.dt=b.dt
+where a.dt>='2023-01-09'
+group by 1,2,3,4,6
