@@ -1,12 +1,12 @@
 delete from
     dbo_wms.keywordsearched
 where
-    Month =Month(current_date);
+    Month =date_trunc('month',current_date);
 insert into
    dbo_wms.keywordsearched
 with keywords as
 (
-    select * from dbo_wms.mf_events where event_id='300.0.0.1.3' and  dt >= current_date -2 and dt<current_date
+    select * from dbo_wms.mf_events where event_id='300.0.0.1.3' and  date_trunc('month',dt::date)= date_trunc('month',current_date)
 ),
 Top_10_Keyword as
 (
