@@ -6,7 +6,7 @@ insert into
    dbo_wms.keywordsearchedavgamount
 
 with clickstream as (
-    select * from dbo_wms.mf_events where event_id IN('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0','300.0.0.1.2','301.0.0.1.14')
+    select * from clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data where event_id IN('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0','300.0.0.1.2','301.0.0.1.14')
 and  date_trunc('month',dt::date)= date_trunc('month',current_date)
 ),
 raw_data1 as 
@@ -19,7 +19,7 @@ select distinct client_id as clients, dt, 'Step3' as steps, 'Search_invest' as s
 
 client_invested_SIP as
 
-(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date, date_trunc('month',CAST(created_ts as date)) as Mt,cast(created_ts as date) as dt,platform, status, payment_status, sip_type, installment_amount,mandate_id,payment_mode,first_order FROM dbo_wms.sips where(exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and date_trunc('month',dt::date)=date_trunc('month',current_date)),
+(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date, date_trunc('month',CAST(created_ts as date)) as Mt,cast(created_ts as date) as dt,platform, status, payment_status, sip_type, installment_amount,mandate_id,payment_mode,first_order FROM dbo_wms_s3.sips where(exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and date_trunc('month',created_ts::timestamp::date)=date_trunc('month',current_Date)),
 clients_invested_final as 
 (
 select distinct b.client_id,b.dt,b.installment_amount,b.orders,b.mt from raw_data1 a
