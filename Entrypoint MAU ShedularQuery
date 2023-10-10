@@ -13,7 +13,7 @@ from nancy.spark_users_EntrypointMF   where dt=date_trunc('month',current_date) 
 ),
 client_invest as (
     (SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date,
-   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM "dbo_wms_s3".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts=date_trunc('month',current_date))
+   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM "dbo_wms".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts=date_trunc('month',current_date))
 ),
 clients_invested_final as 
 (
