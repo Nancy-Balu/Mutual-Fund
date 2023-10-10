@@ -1,3 +1,5 @@
+delete from dbo_wms.MF_Category_Details where dt>='2023-10-03';
+insert into dbo_wms.MF_Category_Details as
 with MF_category as (
     SELECT *,cli_timestamp::date as DDate
     FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date>='2023-07-01' and cli_timestamp::date<current_date
