@@ -5,28 +5,28 @@ with MF_category as (
     FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date=current_Date-1 
 ),
 orderpad as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('OrderPad') and  cli_timestamp::date=current_date-1 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('OrderPad') and  cli_timestamp::date=current_Date-1 
 ),
 order_summary as(
     SELECT *,cli_timestamp::date as DDate,case
 WHEN event_id='310.0.0.1.21' and dt<='2023-09-04' THEN 'Success'
 WHEN event_id='310.0.0.1.21' and dt>='2023-09-05' and (lower(event_metadata) like '%"status":"success"%')  THEN 'Success'
 ELSE 'OtherStatus' END AS Result
-FROM dbo_wms.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date=current_date-1  and Result='Success' and json_extract_path_text(lower(event_metadata), 'investmenttype')='sip'
+FROM dbo_wms.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date=current_Date-1  and Result='Success' and json_extract_path_text(lower(event_metadata), 'investmenttype')='sip'
 ),
 DirectPay as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay')  and  cli_timestamp::date=current_date-1 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay')  and  cli_timestamp::date=current_Date-1 
 ),
 ChangePay as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('ChangePay')  and  cli_timestamp::date=current_date-1 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('ChangePay')  and  cli_timestamp::date=current_Date-1 
 ),
 PaymentInitiation as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay','ChangePay') and  cli_timestamp::date='2023-10-03' 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay','ChangePay') and  cli_timestamp::date=current_Date-1 
 )
 ---Category-----
 SELECT count(distinct client_id) as Distinct_users,cli_timestamp::date as  Visit_Date,All_category AS Category_Name, All_category AS Step_Name ,Category_Details AS CategoryPart_Name,client_type, Age_bucket    
 from dbo_wms.MF_Category_Details
-where category_details in('MF_HomePage','Category') and cli_timestamp::date=current_date-1 
+where category_details in('MF_HomePage','Category') and cli_timestamp::date=current_Date-1 
 group by 2,3,4,5,6,7
 
 union all
@@ -34,7 +34,7 @@ union all
  select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'orderpad'||'_'||rn as Step_Name,'orderpad' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,ord.client_id as cid,ord.cli_timestamp , cs.client_type, cs.Age_bucket,
-first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn,cs.Fund_Details
+first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn
 from
 MF_Category as cs 
 INNER JOIN
@@ -50,7 +50,7 @@ union all
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'OrderSummary'||'_'||rn as Step_Name,'OrderSummary' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,ors.client_id as cid,ors.cli_timestamp , cs.client_type, cs.Age_bucket,
-first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn,cs.Fund_Details
+first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn
 from
 MF_Category as cs 
 INNER JOIN
@@ -67,7 +67,7 @@ union all
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'PaymentInitiation'||'_'||rn as Step_Name,'PaymentInitiation' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,pi.client_id as cid,pi.cli_timestamp , cs.client_type, cs.Age_bucket,
-first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn,cs.Fund_Details
+first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn
 from
 MF_Category as cs 
 INNER JOIN
@@ -83,7 +83,7 @@ union all
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'b.DirectPay'||'_'||rn as Step_Name,'b.DirectPay' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,dd.client_id as cid,dd.cli_timestamp , cs.client_type, cs.Age_bucket,
-first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn,cs.Fund_Details
+first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn
 from
 MF_Category as cs 
 INNER JOIN
@@ -99,7 +99,7 @@ union all
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'a.ChangePay'||'_'||rn as Step_Name,'a.ChangePay' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,cp.client_id as cid,cp.cli_timestamp , cs.client_type, cs.Age_bucket,
-first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn,cs.Fund_Details
+first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn
 from
 MF_Category as cs 
 INNER JOIN
