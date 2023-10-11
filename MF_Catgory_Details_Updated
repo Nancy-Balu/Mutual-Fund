@@ -1,5 +1,5 @@
-delete from dbo_wms.MF_Category_Details where dt>='2023-10-04';
-insert into dbo_wms.MF_Category_Details as
+drop table dbo_wms.MF_Category_Details;
+create table dbo_wms.MF_Category_Details as
 with client_kyc as (
 select party_code,case  when Client_type='B2B' then 'B2B' when Client_type='B2C' then 'B2C'else null end as Client_type,
 case when age between 18 and 25 then '18-25'when age between 26 and 30 then '26-30'when age between 31 and 35 then '31-35'when age between 36 and 40 then '36-40' when age between 41 and 45 then '41-45' when age between 46 and 50 then '46-50' when age <18 then 'less than 18'
@@ -16,7 +16,7 @@ WHEN event_id='318.0.0.1.2' THEN 'AskAngel'
 WHEN event_id='308.0.0.6.13' THEN 'MostBoughtFund'
 WHEN event_id='308.0.0.6.4' THEN 'StoryFund'
 WHEN event_id IN('309.0.0.1.6','309.0.0.1.2') THEN 'SipBook'
-WHEN event_id='306.0.0.13.29' THEN 'FundforYou'
+WHEN event_id IN('306.0.0.13.27','306.0.0.13.29') THEN 'FundforYou'
 WHEN event_id='306.0.0.13.21' THEN 'InvestMore'
 WHEN event_id IN('300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0') THEN 'Search'
 WHEN event_id ='310.0.0.1.0'  THEN 'OrderPad' 
@@ -27,7 +27,7 @@ else 'Other'
 end as All_Category,
 case 
 WHEN event_id='308.0.0.1.0' THEN 'MF_HomePage'
-WHEN event_id IN('308.0.0.2.0','318.0.0.1.2','308.0.0.6.48','308.0.0.6.13','308.0.0.6.4','309.0.0.1.6','306.0.0.13.29','306.0.0.13.21','300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0','309.0.0.1.2') THEN 'Category'
+WHEN event_id IN('308.0.0.2.0','306.0.0.13.27','318.0.0.1.2','308.0.0.6.48','308.0.0.6.13','308.0.0.6.4','309.0.0.1.6','306.0.0.13.29','306.0.0.13.21','300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0','309.0.0.1.2') THEN 'Category'
 WHEN event_id ='310.0.0.1.0'  THEN 'OrderPad' 
 WHEN event_id ='310.0.0.1.21' THEN 'OrderSummary'
 WHEN event_id ='310.0.0.1.5' THEN 'DirectPay'
@@ -36,10 +36,10 @@ else 'Other'
 end as Category_Details
 from  "dbo-angels"."clickstream_internal"."mf_clickstream_data"
 where event_id IN(
-    '308.0.0.2.0','318.0.0.1.2','308.0.0.6.48','308.0.0.6.13','310.0.0.1.0','310.0.0.1.21','310.0.0.1.5','310.0.0.1.8','308.0.0.1.0','308.0.0.6.4',
+    '308.0.0.2.0','306.0.0.13.27','318.0.0.1.2','308.0.0.6.48','308.0.0.6.13','310.0.0.1.0','310.0.0.1.21','310.0.0.1.5','310.0.0.1.8','308.0.0.1.0','308.0.0.6.4',
 '309.0.0.1.6','306.0.0.13.29','306.0.0.13.21','300.0.0.1.3','300.0.0.1.2','300.0.0.1.1','300.0.0.1.0','309.0.0.1.2'
 )
-and dt>='2023-10-01'  and All_Category<>' '
+and dt>='2023-07-01'  and All_Category<>' '
 )
 
 select * from MF_Category mfc
