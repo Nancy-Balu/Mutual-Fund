@@ -1,5 +1,5 @@
-delete from dbo_wms.funnel_clienttimestampist where visit_date>=current_date-1;
-insert into dbo_wms.funnel_clienttimestampist as
+delete from dbo_wms.funnel_mfcategory where visit_date>=current_date-1;
+insert into dbo_wms.funnel_mfcategory as
 with MF_category as (
     SELECT *,cli_timestamp::date as DDate
     FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date=current_Date-1 
