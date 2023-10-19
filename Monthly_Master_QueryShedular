@@ -27,7 +27,7 @@ sn_clientkyc_data b on a.spark_users =b.party_code),
 
 
 client_invested as 
-(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date, date_trunc('month',CAST(created_ts as date)) as Mt,CAST(created_ts as date) as dt,platform, status, payment_status,first_order, sip_type, '2.0' version FROM dbo_wms.sips where id>0 and (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and date_trunc('month',created_ts::date)=date_trunc('month',current_date)),
+(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date, date_trunc('month',CAST(created_ts as date)) as Mt,CAST(created_ts as date) as dt,platform, status, payment_status,first_order, sip_type, '2.0' version FROM dbo_wms.sips where id>0 and (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and date_trunc('month',created_ts::date)=date_trunc('month',current_date-1)),
 
 
 raw_data2 as 
