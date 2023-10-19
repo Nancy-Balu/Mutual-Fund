@@ -42,7 +42,7 @@ lump_sum as
 (
  select *,date_trunc('month',CAST(created_ts as date)) as Mt from dbo_wms.orders where
     investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED'
-    and id >0 and date_trunc('month',created_ts::date)=date_trunc('month',current_date)),
+    and id >0 and date_trunc('month',created_ts::date)=date_trunc('month',current_date-1)),
 
 lump_sum_b2b_b2c as 
 (select a.*,b.b2c from lump_sum a left join sn_clientkyc_data b 
