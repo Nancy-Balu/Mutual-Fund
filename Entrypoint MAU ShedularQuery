@@ -1,53 +1,89 @@
-delete from dbo.wms.entrypoint_mau where mt=date_trunc('month',current_date);
-insert into dbo.wms.entrypoint_mau as 
+delete from  dbo.wms.mfentrypoint_mau where mt=date_trunc('month',current_Date-1)
 with stockclickstream as(
+(select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::date)=date_trunc('month',current_Date-1) and event_id in ('11.0.0.1.85')  and ( lower(event_name) like '%mutual%'OR 
+lower(event_metadata) like '%mutual%' and lower(event_name)<>'otherinvestmentsiconclick'))
+union all
+(
 select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_ICON' as stepdetail,case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::Date)=date_trunc('month',current_date) and event_id in ('11.0.0.1.66')  and split_part(split_part(event_metadata,'Icon Title":',2),'}',1)='Mutual Funds' 
+from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::date)=date_trunc('month',current_Date-1) and event_id in ('11.0.0.1.66')  and split_part(split_part(event_metadata,'Icon Title":',2),'}',1)='Mutual Funds'    
+)
 union all
-select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::Date)=date_trunc('month',current_date) and (event_id in ('11.0.0.1.85')  and  lower(event_name) like '%mutual%' OR 
-(lower(event_metadata) like '%mutual%' and lower(event_name)<>'otherinvestmentsiconclick'))
-union all
+(
 select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_StockDetails' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::Date)=date_trunc('month',current_date) and event_id in ('5.0.0.40.1')  and lower(event_metadata) like '%mf%'
+from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::date)=date_trunc('month',current_Date-1) and event_id in ('5.0.0.40.1')  and lower(event_metadata) like '%mf%'    
+)
+union all 
+(
+select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_PortFolio-StarSip' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::date)=date_trunc('month',current_Date-1) and event_id in ('8.0.0.1.56')  and lower(event_metadata) like '%mutual%'
+)
+union all
+(
+select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_PortFolio-ViewMF' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::date)=date_trunc('month',current_Date-1) and event_id in ('8.0.0.46.1')  and lower(event_name) like '%viewmf%'    
+)
+union all
+(
+  select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_GetStarted-Amh' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+from nancy.spark_users_EntrypointMF   where date_trunc('month',dt::date)=date_trunc('month',current_Date-1) and event_id in ('11.0.0.3.3')  
+)
 )
 ,
-client_invest as (
-    (SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date,
-   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM "dbo_wms_s3".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and date_trunc('month',created_ts::date)=date_trunc('month',current_date))
-),
-clients_invested_final as 
+sn_clientkyc_data as 
 (
-select distinct b.client_id,b.orders,b.dt,a.platform,a.stepdetail from stockclickstream a
-left join client_invest b on a.client_id=b.client_id
-and a.dt1=b.dt
---and a.client_timestamp::timestamp<=b.created_time::timestamp
+select  distinct party_code as party_code,case when b2c='Y' then 'B2C' when b2c='N' then 'B2B' else null end as User_type,datediff(year,cast(birthdate as date),current_date) as age from "dbo_angels"."product_analytics"."sn_clientkyc" ),
+
+raw_Data1 as
+(select a.*,b.User_type from stockclickstream a left join 
+sn_clientkyc_data b on a.client_id =b.party_code),
+
+SIP_invest as (
+    (SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date,
+   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM "dbo_wms".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and date_trunc('month',created_ts::date)>=date_trunc('month',current_Date-1))
 ),
+SIP_invested_final as 
+(
+select distinct b.client_id,b.orders,b.dt,a.platform,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
+left join SIP_invest b on a.client_id=b.client_id
+and a.dt1=b.dt
+where a.client_timestamp::timestamp<=b.created_time::timestamp
+),
+raw_Data2 as(
+    select a.*,b.User_type from SIP_invested_final a
+left join sn_clientkyc_data b 
+on a.client_id =b.party_code),
+
 lump_sum as 
 (
- select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_wms_s3.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and date_trunc('month',created_ts::timestamp::date)=date_trunc('month',current_date)),
+ select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_wms_s3.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and date_trunc('month',created_ts::date)>=date_trunc('month',current_Date-1)),
 lump_sum_invested as
 (
-select distinct b.client_id,b.orders,b.dt,a.platform,a.stepdetail from stockclickstream a
+select distinct b.client_id,b.orders,b.dt,a.platform,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
 left join lump_sum b on a.client_id=b.client_id
-and a.dt1=b.dt    
+and a.dt1=b.dt  
+where a.client_timestamp::timestamp<=b.created_time::timestamp
 ),
-raw_data3 as 
+raw_data3 as(
+    select a.*,b.User_type from lump_sum_invested a 
+    left join sn_clientkyc_data b on a.client_id=b.party_code
+),
+raw_data4 as 
 (
-select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt1 as date)) as mt,'Step1' as steps, 'MF EntryPoint' as step_name,stepdetail,platform from stockclickstream  
-group by 2,5,6
+select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt1 as date)) as mt,'Step1' as steps, 'MF EntryPoint' as step_name,stepdetail,platform , user_type from raw_Data1  
+group by 2,5,6,7
 union all    
-select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step2' as steps, 'Unique Client Invested Sip' as step_name,stepdetail,platform  from clients_invested_final  
-group by 2,5,6
+select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step2' as steps, 'Unique Client Invested Sip' as step_name,rn as stepdetail,platform, user_type  from raw_Data2  
+group by 2,5,6,7
 union all
-select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step3' as steps, 'Sip Orders' as step_name,stepdetail,platform  from clients_invested_final  
-group by 2,5,6
+select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step3' as steps, 'Sip Orders' as step_name,rn as stepdetail,platform, user_type  from raw_Data2  
+group by 2,5,6,7
 union all
-select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step4' as steps, 'Unique Client Invested Lumpsum' as step_name,stepdetail,platform  from lump_sum_invested 
-group by 2,5,6
+select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step4' as steps, 'Unique Client Invested Lumpsum' as step_name,rn as stepdetail,platform, user_type  from raw_Data3
+group by 2,5,6,7
 union all
-select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step4' as steps, 'Lumpsum Orders' as step_name,stepdetail,platform  from lump_sum_invested  
-group by 2,5,6
+select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step5' as steps, 'Lumpsum Orders' as step_name,rn as stepdetail,platform, user_type  from raw_Data3  
+group by 2,5,6,7
 )
 
-select * from raw_data3 where mt is not null
+select * from raw_data4
