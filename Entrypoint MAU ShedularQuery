@@ -56,7 +56,7 @@ on a.client_id =b.party_code),
 
 lump_sum as 
 (
- select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_wms_s3.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and date_trunc('month',created_ts::date)>=date_trunc('month',current_Date-1)),
+ select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_wms.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and date_trunc('month',created_ts::date)>=date_trunc('month',current_Date-1)),
 lump_sum_invested as
 (
 select distinct b.client_id,b.orders,b.dt,a.platform,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
