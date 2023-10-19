@@ -1,14 +1,14 @@
-delete from dbo_wms.mf_modified_monthly where Mt=date_trunc('month',current_date);
+delete from dbo_wms.mf_modified_monthly where Mt=date_trunc('month',current_date-1);
 insert into dbo_wms.mf_modified_monthly as
 
 with raw_data1 as 
-(select *,date_trunc('month',CAST(dt as date)) as Mt from dbo_wms.spark_users_all where date_trunc('month',dt::Date)=date_trunc('month',current_date)),
+(select *,date_trunc('month',CAST(dt as date)) as Mt from dbo_wms.spark_users_all where date_trunc('month',dt::Date)=date_trunc('month',current_date-1)),
 
 MF_events as 
-(select *,date_trunc('month',CAST(dt as date)) as Mt from  dbo_wms.MF_events_master where event_id in ('308.0.0.1.0','301.0.0.1.0','305.0.0.1.0','310.0.0.1.5')and date_trunc('month',dt::date)=date_trunc('month',current_date)),
+(select *,date_trunc('month',CAST(dt as date)) as Mt from  dbo_wms.MF_events_master where event_id in ('308.0.0.1.0','301.0.0.1.0','305.0.0.1.0','310.0.0.1.5')and date_trunc('month',dt::date)=date_trunc('month',current_date-1)),
 
 Mf_table as
-(select *,date_trunc('month',CAST(dt as date)) as Mt from  dbo_wms.mf_events  where date_trunc('month',dt::date)=date_trunc('month',current_date) and substring(event_id,1,3) between '300' and '349' ),
+(select *,date_trunc('month',CAST(dt as date)) as Mt from  dbo_wms.mf_events  where date_trunc('month',dt::date)=date_trunc('month',current_date-1) and substring(event_id,1,3) between '300' and '349' ),
 join_mf_spark as 
 (select a.mt,a.spark_users,a.platform,b.client_id as MF_users,b.mt as Mf_date from raw_data1 a left join Mf_table b
 on a.spark_users=b.client_id
