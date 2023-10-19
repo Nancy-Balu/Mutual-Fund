@@ -41,7 +41,7 @@ sn_clientkyc_data b on a.client_id =b.party_code),
 
 SIP_invest as (
     (SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date,
-   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM "dbo_wms_s3".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts::date=current_DAte-1)
+   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status, payment_status,first_order, sip_type, '2.0' version,installment_amount FROM "dbo_wms".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts::date=current_DAte-1)
 ),
 SIP_invested_final as 
 (
@@ -57,7 +57,7 @@ on a.client_id =b.party_code),
 
 lump_sum as 
 (
- select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_wms_s3.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and created_ts::timestamp::date=current_Date-1),
+ select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_wms.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and created_ts::timestamp::date=current_Date-1),
 lump_sum_invested as
 (
 select distinct b.client_id,b.orders,b.dt,a.platform,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
