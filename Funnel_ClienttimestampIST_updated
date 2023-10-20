@@ -11,8 +11,8 @@ order_summary as(
 WHEN event_id='310.0.0.1.21' and dt<='2023-09-04' THEN 'Success'
 WHEN event_id='310.0.0.1.21' and dt>='2023-09-05' and (lower(event_metadata) like '%"status":"success"%')  THEN 'Success'
 ELSE 'OtherStatus' END AS Result
-FROM dbo_wms.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date>='2023-07-01' and cli_timestamp::date<current_date and Result='Success' and json_extract_path_text(lower(event_metadata), 'investmenttype')='sip'
-),
+FROM dbo_wms.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date>='2023-07-01' and cli_timestamp::date<current_date and Result='Success' and TRIM( BOTH '"' from SPLIT_PART(SPLIT_PART(event_metadata, '"investmentType":',2),',',1)) 
+='SIP'
 DirectPay as(
     SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay')  and  cli_timestamp::date>='2023-07-01' and cli_timestamp::date<current_date
 ),
