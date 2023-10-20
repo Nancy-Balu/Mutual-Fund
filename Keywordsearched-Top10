@@ -2,11 +2,11 @@ insert into dbo_wms.keywordsearched
 
 with keywords as
 (
-    select * from clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data where event_id='300.0.0.1.3' and dt>='2023-09-27'
+    select * from dbo_angels_external.clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data where event_id='300.0.0.1.3' and dt>='2023-09-27'
 ),
 Top_10_Keyword as
 (
-select trim(UPPER(substring(json_extract_path_text(lower(event_metadata), 'fundnamesearched'),1,4))) as substring,
+select trim(UPPER(substring(SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1),1,4))) as substring,
 count(substring) as Keyword_count,
 date_trunc('month',dt::date) as Month,
 row_number() over(partition by Month order by Keyword_count desc ) as rn
