@@ -1,4 +1,4 @@
-delete from dbo_wms.keywordsearched where Month='2023-09-01';
+delete from dbo_wms.keywordsearched where Month>='2023-09-01';
 insert into dbo_wms.keywordsearched 
 
 with keywords as
