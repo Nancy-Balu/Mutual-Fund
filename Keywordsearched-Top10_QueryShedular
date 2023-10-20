@@ -10,7 +10,7 @@ with keywords as
 ),
 Top_10_Keyword as
 (
-select trim(UPPER(substring(json_extract_path_text(lower(event_metadata), 'fundnamesearched'),1,4))) as substring,
+select trim(UPPER(substring(SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1),1,4))) as substring,
 count(substring) as Keyword_count,
 date_trunc('month',dt::date) as Month,
 row_number() over(partition by Month order by Keyword_count desc ) as rn
