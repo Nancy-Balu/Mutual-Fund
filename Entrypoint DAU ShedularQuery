@@ -1,33 +1,33 @@
-delete from dbo.wms.mfentrypoint_dau where dt>=current_Date-1
-insert into dbo.wms.mfentrypoint_dau
+delete from dbo_wms.mfentrypoint_dau where dt>=current_Date-1;
+insert into dbo_wms.mfentrypoint_dau
 with stockclickstream as(
 (select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where dt=current_date-1 and event_id in ('11.0.0.1.85')  and ( lower(event_name) like '%mutual%'OR 
+from dbo_wms.spark_users_EntrypointMF   where dt=current_date-1 and event_id in ('11.0.0.1.85')  and ( lower(event_name) like '%mutual%'OR 
 lower(event_metadata) like '%mutual%' and lower(event_name)<>'otherinvestmentsiconclick'))
 union all
 (
 select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_ICON' as stepdetail,case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where dt=current_date-1 and event_id in ('11.0.0.1.66')  and split_part(split_part(event_metadata,'Icon Title":',2),'}',1)='Mutual Funds'    
+from dbo_wms.spark_users_EntrypointMF   where dt=current_date-1 and event_id in ('11.0.0.1.66')  and split_part(split_part(event_metadata,'Icon Title":',2),'}',1)='Mutual Funds'    
 )
 union all
 (
 select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_StockDetails' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('5.0.0.40.1')  and lower(event_metadata) like '%mf%'    
+from dbo_wms.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('5.0.0.40.1')  and lower(event_metadata) like '%mf%'    
 )
 union all 
 (
 select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_PortFolio-StarSip' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('8.0.0.1.56')  and lower(event_metadata) like '%mutual%'
+from dbo_wms.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('8.0.0.1.56')  and lower(event_metadata) like '%mutual%'
 )
 union all
 (
 select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_PortFolio-ViewMF' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('8.0.0.46.1')  and lower(event_name) like '%viewmf%'    
+from dbo_wms.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('8.0.0.46.1')  and lower(event_name) like '%viewmf%'    
 )
 union all
 (
   select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_GetStarted-Amh' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
-from nancy.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('11.0.0.3.3')  
+from dbo_wms.spark_users_EntrypointMF   where dt=current_Date-1 and event_id in ('11.0.0.3.3')  
 )
 )
 ,
