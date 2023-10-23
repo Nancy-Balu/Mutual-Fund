@@ -1,8 +1,9 @@
 create table nancy.collection_report as
+
 with raw_data1 as
 (
  SELECT distinct client_code,order_id, amount,transaction_type,scheme_code,data_source,transaction_date
-FROM "dbo_angels_external"."dbo_wms_s3"."portfolio_transactions" where transaction_date::date>='2023-09-1' and dt<>'2023-10-12'
+FROM "dbo_angels_external"."dbo_wms_s3"."portfolio_transactions" where transaction_date::date>='2023-09-1' and dt<>'2023-10-12' and upper(primary_transaction_type) NOT IN('SWITCH IN','SWITCH OUT')
 ),
 sn_clientkyc_data as 
 (
