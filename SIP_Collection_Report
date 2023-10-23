@@ -1,52 +1,32 @@
 create table nancy.collection_report as
-with orderdata as
+with raw_data1 as
 (
-select distinct client_code, id,status,amount,Investment_type,user_type,scheme_code,sub_broker_code, created_ts from "dbo_angels"."dbo_wms"."orders" where Investment_type IN('REDEEM','LUMPSUM') and 
-upper(status)  in ('ORDER_COMPLETE') and created_ts::date>='2023-07-01'
-union all
-select distinct client_code,id, status,installment_amount as amount,sip_type as investment_type,user_type,scheme_code,sub_broker_code,created_ts from "dbo_angels"."dbo_wms"."sips" where upper(status) not in ('SIP_REJECTED','SIP_FAILED') and  created_ts::date >= '2023-07-01'   
+ SELECT distinct client_code,order_id, amount,transaction_type,scheme_code,data_source,transaction_date
+FROM "dbo_angels_external"."dbo_wms_s3"."portfolio_transactions" where transaction_date::date>='2023-09-1' and dt<>'2023-10-12'
 ),
-b2b_b2c_Equity as (
-select  sum(ord.amount) as amount,ord.investment_type,ord.user_type as channel,sc.taxation_type ,ord.created_ts::date as ddate from 
-"dbo_angels"."dbo_wms"."scheme_plan" sc
-inner join 
-orderdata ord on sc.scheme_code=ord.scheme_code
-where upper(sc.taxation_type) IN('EQUITY')
-group by 2,3,4,5
-),
+sn_clientkyc_data as 
+(
+select  distinct party_code as party_code,case when b2c='Y' then 'B2C' when b2c='N' then 'B2B' else null end as User_type,datediff(year,cast(birthdate as date),current_date) as age, sub_broker from "dbo_angels"."product_analytics"."sn_clientkyc" ),
 
-b2b_b2c_nonequity as (
-select  sum(ord.amount) as amount,ord.investment_type,ord.user_type as channel,case when lower(sc.scheme_name) like '%liquid%' then 'Liquid' else 'Debt' end as Scheme_type,ord.created_ts::date as ddate from 
-"dbo_angels"."dbo_wms"."scheme_plan" sc
-inner join 
-orderdata ord on sc.scheme_code=ord.scheme_code
-where upper(sc.taxation_type) IN('NON-EQUITY')
-group by 2,3,4,5)
-,
-mfsb_equity as(
-    select  sum(ord.amount) as amount,ord.investment_type,'MFSB' as channel,sc.taxation_type ,ord.created_ts::date as ddate from 
-"dbo_angels"."dbo_wms"."scheme_plan" sc
-inner join 
-orderdata ord on sc.scheme_code=ord.scheme_code
-where upper(sc.taxation_type) IN('EQUITY') and ord.sub_broker_code='MFSB'
-group by 2,3,4,5
-),
-mfsb_nonequity as(
-select  sum(ord.amount) as amount,ord.investment_type,'MFSB' as channel,case when lower(sc.scheme_name) like '%liquid%' then 'Liquid' else 'Debt' end as Scheme_type,ord.created_ts::date as ddate from 
-"dbo_angels"."dbo_wms"."scheme_plan" sc
-inner join 
-orderdata ord on sc.scheme_code=ord.scheme_code
-where upper(sc.taxation_type) IN('NON-EQUITY')  and ord.sub_broker_code='MFSB'
-group by 2,3,4,5
-)
+orderdata as
+(select a.*,b.User_type,b.sub_broker from raw_data1 a left join 
+sn_clientkyc_data b on a.client_code =b.party_code)
 
+(
+select  sum(ord.amount) as amount,ord.transaction_type as investment_type,ord.user_type as channel,sc.taxation_type ,ord.data_source,
+case when lower(sc.taxation_type)='equity' then 'Equity' 
+when lower(sc.taxation_type)='non-equity' and lower(sc.scheme_name) like '%liquid%' then 'Liquid' else 'Debt' end as Fund_type,
+ord.transaction_date::date as ddate from orderdata ord 
+left join (select distinct scheme_code,taxation_type,scheme_name from "dbo_angels"."dbo_wms"."scheme_plan"  ) sc on ord.scheme_code=sc.scheme_code 
+where lower(sc.taxation_type) in ('equity','non-equity')
+group by 2,3,4,5,6,7)
 
-select * from b2b_b2c_Equity
 union all 
-select * from b2b_b2c_nonequity
-union all 
-select * from mfsb_equity
-union all 
-select * from mfsb_nonequity
-
-
+(
+select  sum(ord.amount) as amount,ord.transaction_type as investment_type,'MFSB' as channel,sc.taxation_type ,ord.data_source,
+case when lower(sc.taxation_type)='equity' then 'Equity' 
+when lower(sc.taxation_type)='non-equity' and lower(sc.scheme_name) like '%liquid%' then 'Liquid' else 'Debt' end as Fund_type,
+ord.transaction_date::date as ddate from orderdata ord 
+left join (select distinct scheme_code,taxation_type,scheme_name from "dbo_angels"."dbo_wms"."scheme_plan"  ) sc on ord.scheme_code=sc.scheme_code 
+where lower(sc.taxation_type) in ('equity','non-equity') and ord.sub_broker='MFSB'
+group by 2,3,4,5,6,7)
