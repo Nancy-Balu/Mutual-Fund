@@ -1,4 +1,4 @@
-create table dbo.wms.mfentrypoint_dau as
+create table dbo_wms.mfentrypoint_dau as
 with stockclickstream as(
 (select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
 from nancy.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('11.0.0.1.85')  and ( lower(event_name) like '%mutual%'OR 
