@@ -1,6 +1,6 @@
 delete from dbo.wms.spark_users_EntrypointMF where dt>=current_Date-1;
-insert into dbo.wms.spark_users_EntrypointMF as 
- Select *, 'Spark_Android' as platform from "sandbox"."clickstream"."db_dbo_clickstream_data_tablename_dp_spark_clickstream_data" where dt=current_Date-1 and event_id in ('11.0.0.1.66', '11.0.0.1.85','5.0.0.40.1','8.0.0.1.56','8.0.0.46.1','11.0.0.3.3')  
+insert into dbo.wms.spark_users_EntrypointMF 
+ Select *, 'Spark_Android' as platform from "dbo_angels"."clickstream_internal"."dp_spark_clickstream_data" where dt=current_Date-1 and event_id in ('11.0.0.1.66', '11.0.0.1.85','5.0.0.40.1','8.0.0.1.56','8.0.0.46.1','11.0.0.3.3')  
 union all
-select *,'Spark_iOS' as platform from "sandbox"."clickstream"."db_dbo_clickstream_data_tablename_spark_ios_clickstream_data"
+select *,'Spark_iOS' as platform from "dbo_angels"."clickstream_internal"."spark_ios_clickstream_data"
  where dt=current_Date-1 and  event_id in ('11.0.0.1.66', '11.0.0.1.85','5.0.0.40.1','8.0.0.1.56','8.0.0.46.1','11.0.0.3.3')
