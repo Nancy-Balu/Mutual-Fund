@@ -1,3 +1,4 @@
+drop table dbo_wms.funnel_mfcategory;
 create table dbo_wms.funnel_mfcategory as
 with MF_category as (
     SELECT *,cli_timestamp::date as DDate
