@@ -1,4 +1,5 @@
+create table nancy.AUM as 
 SELECT distinct a.client_code,a.order_id, a.amount,a.transaction_type,a.scheme_code,a.data_source,a.transaction_date::date,b.scheme_plan
-FROM "dbo_angels_external"."dbo_wms_s3"."portfolio_transactions" a
+FROM "dbo_wms_s3"."portfolio_transactions" a
 LEFT JOIN (select distinct scheme_code,scheme_plan from "dbo_angels"."dbo_wms"."scheme_plan") b on a.scheme_code=b.scheme_code
-where  a.dt<>'2023-10-12' and a.dt<>'2023-10-25' and a.client_code in('N52292746','A901918','S67488','S52807545','K50000212')
+where  a.dt<>'2023-10-12' and a.dt<>'2023-10-25' and a.transaction_date::date>='2023-08-01'
