@@ -1,24 +1,24 @@
 with Entry as (
    select distinct client_id,api_timestamp::date as Ddate,event_id, 
    case when event_id='309.0.0.1.29' then 'SipBook' 
-   when event_id='309.0.0.1.37' then 'Manage Mandate' when event_id='310.0.0.1.22' then 'Order Summary' END as Step_detail from dbo_angels.dbo_wms.mf_events where event_id IN('309.0.0.1.37','309.0.0.1.29','310.0.0.1.22') and dt>='2023-09-01'
+   when event_id='309.0.0.1.37' then 'Manage Mandate' when event_id='310.0.0.1.22' then 'Order Summary' END as Step_detail from dbo_angels.dbo_wms.mf_events where event_id IN('309.0.0.1.37','309.0.0.1.29','310.0.0.1.22') and dt between '2023-05-01' and '2023-08-31'
 ),
 Autopayimp as (
      select distinct b.client_id,b.Ddate,b.event_id,a.Step_detail from Entry a 
-     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.39' and dt>='2023-09-01') b on a.client_id=b.client_id and a.ddate=b.ddate
+     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.39' and dt between '2023-05-01' and '2023-08-31') b on a.client_id=b.client_id and a.ddate=b.ddate
 ),
 autopayclick as (
     select distinct b.client_id,b.Ddate,b.event_id,a.Step_detail from Entry a 
-     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.43' and dt>='2023-09-01') b on a.client_id=b.client_id and a.ddate=b.ddate
+     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.43' and dt between '2023-05-01' and '2023-08-31') b on a.client_id=b.client_id and a.ddate=b.ddate
 ),
 proceed as (
     select distinct b.client_id,b.Ddate,b.event_id,a.Step_detail from Entry a 
-     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.46' and dt>='2023-09-01') b on a.client_id=b.client_id and a.ddate=b.ddate
+     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.46' and dt between '2023-05-01' and '2023-08-31') b on a.client_id=b.client_id and a.ddate=b.ddate
 
 ),
 autopayreg as(
     select distinct b.client_id,b.Ddate,b.event_id,a.Step_detail from Entry a 
-     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.47' and dt>='2023-09-01') b on a.client_id=b.client_id and a.ddate=b.ddate
+     LEFT JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id from dbo_angels.dbo_wms.mf_events where event_id='309.0.0.1.47' and dt between '2023-05-01' and '2023-08-31') b on a.client_id=b.client_id and a.ddate=b.ddate
 )
 
 select ddate,event_id,count(distinct client_id),Step_detail, '01_SetupAutopay Entry' as view from Entry 
