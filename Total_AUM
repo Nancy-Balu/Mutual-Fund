@@ -20,13 +20,11 @@ select sum(amount),investment_type from cte group by 2
 
 -----------------------Currentvalue
 create table nancy.aum1 as
-select distinct a.client_code,a.current_value,a.scheme_code,b.scheme_plan,c.user_type,c.city,c.state,c.nation,a.dt,a.Month,a.year from 
+select distinct a.client_code,a.current_value,a.scheme_code,b.scheme_plan,c.user_type,trim(upper(c.city)) as city,trim(upper(c.state)) as state,trim(upper(c.nation)) as nation,trim(upper(c.region)) as region,trim(upper(c.zone)) as zone,trim(c.zip) as zip,a.dt,a.Month,a.year from 
 (select distinct client_code, current_value,scheme_code , dt, date_trunc('month',dt::Date) as Month,substring(date_trunc('year',dt::Date),1,4) as year 
 from dbo_wms_s3.portfolio_holding 
-where (client_code,date_trunc('month',dt::Date),dt) in (select client_code,date_trunc('month',dt::Date),max(dt) as dt from dbo_wms_s3.portfolio_holding  --where client_code='A901918' 
-group by 1,2)
+where (date_trunc('month',dt::Date),dt) in (select date_trunc('month',dt::Date),max(dt) as dt from dbo_wms_s3.portfolio_holding  
+group by 1)
 ) a 
 LEFT JOIN (select distinct scheme_code,scheme_plan from "dbo_angels"."dbo_wms"."scheme_plan") b on a.scheme_code=b.scheme_code
-LEFT JOIN (Select distinct party_code,case when b2c='Y' then 'B2C' when b2c='N' then 'B2B' else NULL END as user_type,city,state,nation from "dbo_angels"."product_analytics"."sn_clientkyc") c on a.client_code=c.party_code
-
-
+LEFT JOIN (Select distinct party_code,case when b2c='Y' then 'B2C' when b2c='N' then 'B2B' else NULL END as user_type,city,state,nation,region,zone,zip from "dbo_angels"."product_analytics"."sn_clientkyc") c on a.client_code=c.party_code
