@@ -7,7 +7,7 @@ case when c.age between 18 and 25 then '18-25'when c.age between 26 and 30 then 
 else '50+' end as Age_bucket
 from 
 (select distinct client_code, current_value,scheme_code , dt, date_trunc('month',dt::Date) as Month,substring(date_trunc('year',dt::Date),1,4) as year 
-from dbo_wms_s3.portfolio_holding 
+from dbo_angels.dbo_wms.portfolio_transactions
 where dt in (CURRENT_DATE-1) 
 ) a 
 LEFT JOIN (select distinct scheme_code,scheme_plan,scheme_name,
