@@ -1,0 +1,33 @@
+delete from dbo_wms.collection_report where ddate>=current_date-1;
+insert into dbo_wms.collection_report
+with raw_data1 as
+(
+ SELECT distinct client_code,order_id, amount,transaction_type,scheme_code,data_source,transaction_date
+FROM dbo_angels."dbo_wms"."portfolio_transactions" where transaction_date::date=current_date-1 and upper(primary_transaction_type) NOT IN('SWITCH IN','SWITCH OUT')
+),
+sn_clientkyc_data as 
+(
+select  distinct party_code as party_code,case when b2c='Y' then 'B2C' when b2c='N' then 'B2B' else null end as User_type,datediff(year,cast(birthdate as date),current_date) as age, sub_broker from "dbo_angels"."product_analytics"."sn_clientkyc" ),
+
+orderdata as
+(select a.*,b.User_type,b.sub_broker from raw_data1 a left join 
+sn_clientkyc_data b on a.client_code =b.party_code)
+
+(
+select  sum(ord.amount) as amount,ord.transaction_type as investment_type,ord.user_type as channel,sc.taxation_type ,ord.data_source,
+case when lower(sc.taxation_type)='equity' then 'Equity' 
+when lower(sc.taxation_type)='non-equity' and lower(sc.scheme_name) like '%liquid%' then 'Liquid' else 'Debt' end as Fund_type,
+ord.transaction_date::date as ddate from orderdata ord 
+left join (select distinct scheme_code,taxation_type,scheme_name from "dbo_angels"."dbo_wms"."scheme_plan"  ) sc on ord.scheme_code=sc.scheme_code 
+where lower(sc.taxation_type) in ('equity','non-equity')
+group by 2,3,4,5,6,7)
+
+union all 
+(
+select  sum(ord.amount) as amount,ord.transaction_type as investment_type,'MFSB' as channel,sc.taxation_type ,ord.data_source,
+case when lower(sc.taxation_type)='equity' then 'Equity' 
+when lower(sc.taxation_type)='non-equity' and lower(sc.scheme_name) like '%liquid%' then 'Liquid' else 'Debt' end as Fund_type,
+ord.transaction_date::date as ddate from orderdata ord 
+left join (select distinct scheme_code,taxation_type,scheme_name from "dbo_angels"."dbo_wms"."scheme_plan"  ) sc on ord.scheme_code=sc.scheme_code 
+where lower(sc.taxation_type) in ('equity','non-equity') and ord.sub_broker='MFSB'
+group by 2,3,4,5,6,7)
