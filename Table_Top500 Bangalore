@@ -1,5 +1,5 @@
 By AUM------
-select a.client_code,b.city,b.user_type as client_type,COALESCE(c.client_name,d.full_name) as client_name,COALESCE(c.email_id,d.email) as email_id,COALESCE(c.mobile_no,d.mobile) as mobile_no,b.age,a.AUM,a.Dt from (
+select a.client_code,b.city,b.user_type as client_type,upper(COALESCE(c.client_name,d.full_name)) as client_name,lower(COALESCE(c.email_id,d.email,e.email)) as email_id,COALESCE(c.mobile_no,d.mobile,e.mobile_pager) as mobile_no,b.age,a.AUM,a.Dt from (
 (
 select distinct client_code, sum(CAST(current_value AS DECIMAL(38, 2))) as AUM ,inserted_date::Date as Dt
 from dbo_wms_s3.portfolio_holding 
@@ -22,8 +22,12 @@ select distinct a1.user_id,a1.app_number,b1.full_name,c1.email,d1.mobile from db
  LEFT JOIN 
  dbo_angels."kyc2_fulfillment"."start" d1 on a1.app_number=d1.app_number
 )d on a.client_code=d.user_id
+LEFT JOIN
+(
+select * from "back_end_ds"."ispacescorecard"."angelclient1"    
+)e on a.client_code=e.party_code
 )
-where upper(b.city) like '%BANGALORE%' or zip between 560001 and 560114 or zip=560500
+where upper(b.city) like '%BANGALORE%' and client_name IS NOT NULL
 order by AUM DESC
 LIMIT 500
 
