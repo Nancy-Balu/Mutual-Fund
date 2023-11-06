@@ -32,3 +32,42 @@ order by AUM DESC
 LIMIT 500
 
 
+
+by SIP value-----------------
+select a.client_code,b.city,b.user_type as client_type,upper(COALESCE(c.client_name,d.full_name)) as client_name,lower(COALESCE(c.email_id,d.email,e.email)) as email_id,COALESCE(c.mobile_no,d.mobile,e.mobile_pager) as mobile_no,b.age,a.invested_amount
+from (
+(
+Select distinct client_code,id, isin,sip_type,sum(installment_amount) as invested_amount 
+ from dbo_wms_s3.sips
+where 
+ upper(payemt_status)='SUCCESS' and status not in ('SIP_REJECTED','SIP_FAILED')
+group by 1,2,3,4
+) a
+LEFT JOIN 
+( Select distinct party_code,case when b2c='Y' then 'B2C' when b2c='N' then 'B2B' else NULL END as user_type,city,state,nation,region,zone,zip,datediff(year,cast(birthdate as date),current_date) as age from "dbo_angels"."product_analytics"."sn_clientkyc") b
+ on a.client_code=b.party_code
+LEFT JOIN (
+ SELECT distinct party_code,client_name,mobile_no,email_id FROM "dbo_angels_external"."dbo_kycfulfillment"."client_inwardregister"    
+)c on a.client_code=c.party_code
+LEFT JOIN
+(
+select distinct a1.user_id,a1.app_number,b1.full_name,c1.email,d1.mobile from dbo_angels."kyc2_fulfillment"."user_id" a1 
+ LEFT JOIN
+ "dbo_angels"."kyc2_fulfillment"."esign" b1 on a1.app_number=b1.app_number
+ LEFT JOIN
+ "dbo_angels"."kyc2_fulfillment"."email" c1 on a1.app_number=c1.app_number 
+ LEFT JOIN 
+ dbo_angels."kyc2_fulfillment"."start" d1 on a1.app_number=d1.app_number
+)d on a.client_code=d.user_id
+LEFT JOIN
+(
+select * from "back_end_ds"."ispacescorecard"."angelclient1"    
+)e on a.client_code=e.party_code
+)
+where upper(b.city) like '%BANGALORE%' and client_name IS NOT NULL
+order by invested_amount DESC
+LIMIT 500
+
+
+
+
