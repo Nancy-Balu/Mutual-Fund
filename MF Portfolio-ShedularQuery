@@ -1,7 +1,7 @@
 delete from dbo.wms.MF_Portfolio where Date=current_date-1;
-insert into dbo.wms.MF_Portfolio as
+insert into dbo.wms.MF_Portfolio 
 select a.inserted_Date::Date as Date,a.client_code,a.invested_value as Total_Buy_value,a.current_value as Total_current_value,count(distinct b.isin) as No_of_distinct_MFs ,a.inserted_date::date as updated_on from dbo_wms_s3.portfolio a
 LEFT JOIN dbo_wms_s3.portfolio_holding b
-on a.client_code=b.client_code and a.dt=b.dt
+on a.client_code=b.client_code and a.inserted_date::Date=b.inserted_date::date
 where a.inserted_date::date=current_date-1
 group by 1,2,3,4,6
