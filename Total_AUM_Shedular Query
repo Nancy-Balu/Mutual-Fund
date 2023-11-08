@@ -1,6 +1,6 @@
 delete from dbo_wms.Aum_Value 
 where case when dt<> Last_Day(current_date-2) 
-then dt=current_date-2 else current_date-1 END;
+then dt>=current_date-2 else current_date-1 END;
 insert into dbo_angels.Aum_Value
 
 select distinct a.client_code,a.current_value,a.scheme_code,b.scheme as scheme_plan,c.user_type,trim(upper(c.city)) as city,trim(upper(c.state)) as state,trim(upper(c.nation)) as nation,trim(upper(c.region)) as region,trim(upper(c.zone)) as zone,trim(c.zip) as zip,a.dt1 as dt,a.Month,a.year,
