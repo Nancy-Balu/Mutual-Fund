@@ -1,4 +1,4 @@
-delete from dbo_angels.Aum_Value 
+delete from dbo_wms.Aum_Value 
 where case when dt<> Last_Day(current_date-2) 
 then dt=current_date-2 else current_date-1 END;
 insert into dbo_angels.Aum_Value
