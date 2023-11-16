@@ -1,5 +1,5 @@
-delete from  dbo_wms.mfentrypoint_mau where mt=date_trunc('month',current_Date-1);
-insert into dbo_wms.mfentrypoint_mau
+delete from  dbo_wms.entrypoint_mau where mt=date_trunc('month',current_Date-1);
+insert into dbo_wms.entrypoint_mau
 with stockclickstream as(
 (select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
 from dbo_wms.spark_users_EntrypointMF   where date_trunc('month',dt::date)=date_trunc('month',current_Date-1) and event_id in ('11.0.0.1.85')  and ( lower(event_name) like '%mutual%'OR 
