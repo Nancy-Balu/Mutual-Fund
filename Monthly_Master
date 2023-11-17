@@ -1,39 +1,46 @@
+drop table dbo_wms.mf_modified_monthly;
 create table dbo_wms.mf_modified_monthly as
-
 with raw_data1 as 
-(select *,date_trunc('month',CAST(dt as date)) as Mt from dbo_wms.spark_users_all where dt>='2023-01-01'),
-
-MF_events as 
-(select *,date_trunc('month',CAST(dt as date)) as Mt from  dbo_wms.MF_events_master where event_id in ('308.0.0.1.0','301.0.0.1.0','305.0.0.1.0','310.0.0.1.5')and dt>='2023-01-01'),
+(
+select *,date_trunc('month',CAST(dt as date)) as Mt  from dbo_angels.dbo_wms.spark_users_all where dt >='2023-01-01'),
 
 Mf_table as
-(select *,date_trunc('month',CAST(dt as date)) as Mt from  clickstream.db_dbo_clickstream_data_tablename_mf_clickstream_data  where dt>='2023-01-01' and substring(event_id,1,3) between '300' and '349' ),
+(select *,date_trunc('month',CAST(dt as date)) as Mt  from dbo_angels.dbo_wms.mf_events where 
+dt >='2023-01-01' and substring(event_id,1,3) between '300' and '349'
+),
+
 join_mf_spark as 
-(select a.mt,a.spark_users,a.platform,b.client_id as MF_users,b.mt as Mf_date from raw_data1 a left join Mf_table b
+(select a.mt,a.dt,a.spark_users,a.platform,b.client_id as MF_users,b.mt as mt1  ,b.dt as Mf_date from raw_data1 a left join Mf_table b
 on a.spark_users=b.client_id
 and a.mt=b.mt),
 
-
 sn_clientkyc_data as 
 (
-select * from "dbo-angels"."product_analytics"."sn_clientkyc" where activefrom::date >='2022-12-01'),
-
+select * from "dbo_angels"."product_analytics"."sn_clientkyc" where activefrom::date>='2022-12-01'),
 
 mf_spark_b2b_b2c as
 (select a.*,b.b2c from join_mf_spark a left join 
 sn_clientkyc_data b on a.spark_users =b.party_code),
 
-
+mf_orderpad as(
+select distinct client_id,mt from Mf_table where dt>='2023-01-01' and event_id='310.0.0.1.0'
+),
+mf_orderpad_user as(
+select a.*,b.client_id as orderpad_user from mf_spark_b2b_b2c a
+left join
+mf_orderpad b on a.mf_users=b.client_id and a.mt =b.mt
+),
 
 client_invested as 
-(SELECT distinct client_code as client_id,id as orders,dt as Sip_date, cast(updated_ts as date) updated_date, date_trunc('month',CAST(created_ts as date)) as Mt,CAST(created_ts as date) as dt,platform, status, payment_status,first_order, sip_type, '2.0' version FROM dbo_wms_s3.sips where id>0 and (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts>='2023-01-01'),
-
+(SELECT distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date, cast(created_ts as date) dt, status,platform, payemt_status, first_order,sip_type, '2.0' version,date_trunc('month',CAST(created_ts as date)) as Mt FROM dbo_wms_s3.sips where id>0 and (exchange_sip_id <> '' and exchange_sip_id is not null and created_ts::timestamp::date >='2023-01-01' and status not in ('SIP_REJECTED','SIP_FAILED'))),
 
 raw_data2 as 
 (
 select a.*,b.activefrom,b.b2c from client_invested a
-left join db_online_engine_rev.sn_clientkyc b 
-on a.client_id =b.party_code),
+left join sn_clientkyc_data b 
+on a.client_id =b.party_code)
+
+,
 raw_data3 as 
 (
 select *,case when datediff(day,cast(activefrom as date), dt::date) <=30 then 'New Users' else 'Old Users' end new_old_users from raw_data2),
@@ -41,95 +48,103 @@ lump_sum as
 (
  select *,date_trunc('month',CAST(created_ts as date)) as Mt from dbo_wms_s3.orders where
     investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED'
-    and id >0 and created_ts>='2023-01-01'),
-
+    and id >0 and created_ts::timestamp::date >='2023-01-01'),
 lump_sum_b2b_b2c as 
 (select a.*,b.b2c from lump_sum a left join sn_clientkyc_data b 
 on a.client_code =b.party_code)
-  
 select
- mt,
+  mt,
   'Step1' as steps,
   'Spark_Users' as step_name,
   b2c,
-  platform as platform_month,
+  platform,
   count(distinct spark_users)
   from mf_spark_b2b_b2c
 group by 1,2,3,4,5
 union all
 select
- mt,
+  mt,
   'Step2' as steps,
   'MF_users' as step_name,
   b2c,
-  platform as platform_month,
+  platform,
   count(distinct MF_users)
    from mf_spark_b2b_b2c
   group by 1,2,3,4,5
   union all
   select
-mt,
+ mt,
   'Step3' as steps,
-  'MF_users_invested' as step_name,
+  'MFOrderpad_users' as step_name,
   b2c,
-  platform as platform_month,
-  count(distinct client_id)
-   from raw_data3
-    where payment_status = 'SUCCESS'
+  platform,
+  count(distinct orderpad_user)
+   from mf_orderpad_user
   group by 1,2,3,4,5
   union all
   select
  mt,
-  'Step3.1' as steps,
+  'Step4' as steps,
+  'MF_users_invested' as step_name,
+  b2c,
+  platform,
+  count(distinct client_id)
+   from raw_data3
+  where upper(payemt_status) = 'SUCCESS'
+  group by 1,2,3,4,5
+  union all
+  select
+mt,
+  'Step4.1' as steps,
   'MF_users_old' as step_name,
   b2c,
-  platform as platform_month,
+  platform,
   count(distinct client_id)
    from raw_data3
    where new_old_users ='Old Users'
-   and payment_status = 'SUCCESS'
+ and upper(payemt_status) = 'SUCCESS'
   group by 1,2,3,4,5
   union all
   select
   mt,
-  'Step3.2' as steps,
+  'Step4.2' as steps,
   'MF_users_New' as step_name,
-   b2c,
-   platform as platform_month,
+  b2c,
+  platform,
   count(distinct client_id)
    from raw_data3
    where new_old_users ='New Users'
- and payment_status = 'SUCCESS'
+    and upper(payemt_status) = 'SUCCESS'
   group by 1,2,3,4,5
   union all
   select
   mt,
-  'Step4' as steps,
+  'Step5' as steps,
   'Orders_Placed' as step_name,
-   b2c,
-   platform as platform_month,
+  b2c,
+  platform,
   count(distinct orders)
    from raw_data3
    group by 1,2,3,4,5
-union all 
-select
-   mt,
-  'Step4.1' as steps,
+   union all
+   select
+  mt,
+  'Step5.1' as steps,
   'Orders_Placed_paid' as step_name,
   b2c,
-  platform as platform_month,
+  platform,
   count(distinct orders)
    from raw_data3
 where first_order = 'TRUE'
-and payment_status = 'SUCCESS'
+and upper(payemt_status) = 'SUCCESS'
 group by 1,2,3,4,5
-union all
-select
+   union all 
+   select
   mt,
-  'Step5' as steps,
+  'Step6' as steps,
   'Lump_sump' as step_name,
-   b2c,
-   order_source as platform_month,
+  b2c,
+  order_source as platform,
   count(distinct id)
    from lump_sum_b2b_b2c
    group by 1,2,3,4,5
