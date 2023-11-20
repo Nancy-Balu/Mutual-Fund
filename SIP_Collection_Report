@@ -1,8 +1,8 @@
-create table dbo_wms.collection_report as
+insert into dbo_angels.dbo_wms.collection_report
 with raw_data1 as
 (
  SELECT distinct client_code,order_id, amount,transaction_type,scheme_code,data_source,transaction_date
-FROM "dbo_angels_external"."dbo_wms_s3"."portfolio_transactions" where transaction_date::date>='2023-04-1' and upper(primary_transaction_type) NOT IN('SWITCH IN','SWITCH OUT')
+FROM "dbo_angels_external"."dbo_wms_s3"."portfolio_transactions" where transaction_date::date>='2023-11-08' and upper(primary_transaction_type) NOT IN('SWITCH IN','SWITCH OUT')
 ),
 sn_clientkyc_data as 
 (
