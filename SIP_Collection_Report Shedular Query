@@ -1,9 +1,9 @@
-delete from dbo_wms.collection_report where ddate>=current_date-1;
+delete from dbo_wms.collection_report where ddate>=current_date-2;
 insert into dbo_wms.collection_report
 with raw_data1 as
 (
  SELECT distinct client_code,order_id, amount,transaction_type,scheme_code,data_source,transaction_date
-FROM dbo_angels."dbo_wms"."portfolio_transactions" where transaction_date::date=current_date-1 and upper(primary_transaction_type) NOT IN('SWITCH IN','SWITCH OUT')
+FROM dbo_angels."dbo_wms"."portfolio_transactions" where transaction_date::date=current_date-2 and upper(primary_transaction_type) NOT IN('SWITCH IN','SWITCH OUT')
 ),
 sn_clientkyc_data as 
 (
