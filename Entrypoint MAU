@@ -1,32 +1,38 @@
+drop table dbo_wms.entrypoint_mau;
 create table dbo_wms.entrypoint_mau as
 with stockclickstream as(
-(select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+(select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform,'s-ExploreMF' as Landing_page  
 from dbo_wms.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('11.0.0.1.85')  and ( lower(event_name) like '%mutual%'OR 
 lower(event_metadata) like '%mutual%' and lower(event_name)<>'otherinvestmentsiconclick'))
 union all
 (
-select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_ICON' as stepdetail,case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_ICON' as stepdetail,case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform, 's-MFHomepage' as Landing_page 
 from dbo_wms.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('11.0.0.1.66')  and split_part(split_part(event_metadata,'Icon Title":',2),'}',1)='Mutual Funds'    
 )
 union all
 (
-select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_StockDetails' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'StockDetails-TopMFInvested' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform , 's-FundDetail' as Landing_page
 from dbo_wms.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('5.0.0.40.1')  and lower(event_metadata) like '%mf%'    
 )
 union all 
 (
-select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_PortFolio-StarSip' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'PortFolio-MFStartSip' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform ,'s-MFHomepage' as Landing_page
 from dbo_wms.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('8.0.0.1.56')  and lower(event_metadata) like '%mutual%'
 )
 union all
 (
-select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_PortFolio-ViewMF' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'PortFolio-MFInvestmentdetails' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform ,'s-InvestmentDashboard' as landing_page
 from dbo_wms.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('8.0.0.46.1')  and lower(event_name) like '%viewmf%'    
 )
 union all
 (
-  select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_GetStarted-Amh' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform 
+  select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'MF_GetStarted-Amh' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform,'s-ExploreMF' as landing_page  
 from dbo_wms.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('11.0.0.3.3')  
+)
+union all
+(
+  select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps, 'Portfolio-Active_MF_Sips' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform,'s-SipBook' as Landing_page  
+from dbo_wms.spark_users_EntrypointMF   where dt>='2023-04-01' and event_id in ('8.0.0.1.50') and lower(event_metadata) like '%mutual%'
 )
 )
 ,
@@ -40,11 +46,11 @@ sn_clientkyc_data b on a.client_id =b.party_code),
 
 SIP_invest as (
     (SELECT distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,
-   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status,first_order, sip_type, '2.0' version,installment_amount FROM "dbo_wms_s3".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts>='2023-04-01')
+   platform, convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt,status,first_order, sip_type, '2.0' version,installment_amount FROM dbo_angels."dbo_wms".sips where  (exchange_sip_id <> '' and exchange_sip_id is not null and status not in ('SIP_REJECTED','SIP_FAILED')) and created_ts::date>='2023-04-01')
 ),
 SIP_invested_final as 
 (
-select distinct b.client_id,b.orders,b.dt,a.platform,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
+select distinct b.client_id,b.orders,b.dt,a.platform,a.Landing_page,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
 left join SIP_invest b on a.client_id=b.client_id
 and a.dt1=b.dt
 where a.client_timestamp::timestamp<=b.created_time::timestamp
@@ -56,10 +62,10 @@ on a.client_id =b.party_code),
 
 lump_sum as 
 (
- select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_wms_s3.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and created_ts::timestamp::date>='2023-04-01'),
+ select  distinct client_code as client_id,id as orders, cast(updated_ts as date) updated_date,convert_timezone('UTC', 'Asia/Kolkata', created_ts) as created_time,created_time::date as dt from dbo_angels.dbo_wms.orders where investment_type='LUMPSUM' and exchange_order_id is not null and exchange_order_id<>'' and status <> 'ORDER_REJECTED' and id >0 and created_ts::date>='2023-04-01'),
 lump_sum_invested as
 (
-select distinct b.client_id,b.orders,b.dt,a.platform,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
+select distinct b.client_id,b.orders,b.dt,a.platform,a.Landing_page,first_value(a.stepdetail) over(partition by a.client_id,a.dt order by a.client_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn from stockclickstream a
 left join lump_sum b on a.client_id=b.client_id
 and a.dt1=b.dt  
 where a.client_timestamp::timestamp<=b.created_time::timestamp
@@ -68,22 +74,32 @@ raw_data3 as(
     select a.*,b.User_type from lump_sum_invested a 
     left join sn_clientkyc_data b on a.client_id=b.party_code
 ),
-raw_data4 as 
+sparkusers_all as (
+    select spark_users,case when platform='Spark_iOS' then 'Spark_IOS' else platform end as platform,dt from dbo_angels.dbo_wms.spark_users_all where dt>='2023-04-01'
+),
+raw_data4 as(
+     select a.*,b.User_type from sparkusers_all a 
+    left join sn_clientkyc_data b on a.spark_users=b.party_code
+)  ,  
+raw_data5 as 
 (
-select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt1 as date)) as mt,'Step1' as steps, 'MF EntryPoint' as step_name,stepdetail,platform , user_type from raw_Data1  
-group by 2,5,6,7
+select  count(distinct spark_users) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step0' as steps, 'Spark_users' as step_name,'Spark_users' as stepdetail,platform ,'SparkHomepage' as Landing_page, user_type from raw_Data4  
+group by 2,5,6,7,8
 union all    
-select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step2' as steps, 'Unique Client Invested Sip' as step_name,rn as stepdetail,platform, user_type  from raw_Data2  
-group by 2,5,6,7
+select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt1 as date)) as mt,'Step1' as steps, 'MF EntryPoint' as step_name,stepdetail,platform ,Landing_page, user_type from raw_Data1  
+group by 2,5,6,7,8
+union all    
+select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step2' as steps, 'Unique Client Invested Sip' as step_name,rn as stepdetail,platform,Landing_page, user_type  from raw_Data2  
+group by 2,5,6,7,8
 union all
-select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step3' as steps, 'Sip Orders' as step_name,rn as stepdetail,platform, user_type  from raw_Data2  
-group by 2,5,6,7
+select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step3' as steps, 'Sip Orders' as step_name,rn as stepdetail,platform, Landing_page,user_type  from raw_Data2  
+group by 2,5,6,7,8
 union all
-select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step4' as steps, 'Unique Client Invested Lumpsum' as step_name,rn as stepdetail,platform, user_type  from raw_Data3
-group by 2,5,6,7
+select  count(distinct client_id) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step4' as steps, 'Unique Client Invested Lumpsum' as step_name,rn as stepdetail,platform,Landing_page, user_type  from raw_Data3
+group by 2,5,6,7,8
 union all
-select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step5' as steps, 'Lumpsum Orders' as step_name,rn as stepdetail,platform, user_type  from raw_Data3  
-group by 2,5,6,7
+select  count(distinct orders) as Cnt,date_trunc('month',CAST(dt as date)) as mt,'Step5' as steps, 'Lumpsum Orders' as step_name,rn as stepdetail,platform,Landing_page, user_type  from raw_Data3  
+group by 2,5,6,7,8
 )
 
-select * from raw_data4
+select * from raw_data5
