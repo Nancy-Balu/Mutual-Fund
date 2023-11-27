@@ -3,6 +3,7 @@ create table dbo_wms.funnel_mfcategory as
 with MF_category as (
     SELECT *,cli_timestamp::date as DDate
     FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date>='2023-07-01' and cli_timestamp::date<current_date
+    and all_category <>'Other'
 ),
 orderpad as(
     SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('OrderPad') and  cli_timestamp::date>='2023-07-01' and cli_timestamp::date<current_date
