@@ -1,3 +1,4 @@
+drop table dbo_wms.funnel_clienttimestampist;
 drop table dbo_wms.funnel_mfcategory;
 create table dbo_wms.funnel_mfcategory as
 with MF_category as (
@@ -35,7 +36,7 @@ orderpad_final as (
  select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'orderpad'||'_'||rn as Step_Name,'orderpad' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,ord.client_id as cid,ord.cli_timestamp , cs.client_type, cs.Age_bucket,
-first_value(cs.all_category) over(partition by cs.client_id,cs.ddate order by cs.cli_timestamp desc ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  as rn
+cs.all_category  as rn
 from
 MF_Category as cs 
 INNER JOIN
