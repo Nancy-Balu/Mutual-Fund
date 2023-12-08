@@ -11,8 +11,8 @@ else '50+' end as Age_bucket from(
 select  dt,client_id,api_timestamp,client_timestamp,(timestamp 'epoch' + client_timestamp_unix/1000 * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'  as cli_timestamp,event_metadata,event_id,
 case  
 WHEN event_id='308.0.0.1.0' THEN 'MF_HomePage'
-WHEN event_id='308.0.0.2.1' and event_metadata in('SIP With ₹500','High Returns','SIP With ₹100','Index Funds') THEN 'TopPicks'||'_'||event_metadata 
-WHEN event_id='308.0.0.2.1' and event_metadata in('Small Cap Funds','Mid Cap Funds','Large Cap Funds') then  'Collections'||'_'||event_metadata
+WHEN event_id IN('308.0.0.2.1','308.0.0.6.48') and event_metadata in('SIP With ₹500','High Returns','SIP With ₹100','Index Funds') THEN 'TopPicks'||'_'||event_metadata 
+WHEN event_id IN('308.0.0.2.1','308.0.0.6.48') and event_metadata in('Small Cap Funds','Mid Cap Funds','Large Cap Funds') then  'Collections'||'_'||event_metadata
 --WHEN event_id='308.0.0.2.0' THEN SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1)
 WHEN event_id='318.0.0.1.2' THEN 'AskAngel'
 WHEN event_id='308.0.0.6.13' THEN 'MostBoughtFund'
@@ -62,6 +62,7 @@ select  dt,client_id,api_timestamp,client_timestamp,(timestamp 'epoch' + client_
 case  
 WHEN event_id='308.0.0.1.0' THEN 'MF_HomePage'
 WHEN event_id='308.0.0.2.1' THEN 'TopPicks'||'_'||SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 3),'"',''),'}',''),',',1)
+WHEN event_id='308.0.0.2.5' THEN 'Collections'||'_'||SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 3),'"',''),'}',''),',',1)
 WHEN event_id='308.0.0.2.0' and SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 3),'"',''),'}',''),',',1)='null' THEN 'Deep_Link' || SPLIT_PART(replace(replace(SPLIT_PART(event_metadata, ':', 2),'"',''),'}',''),',',1)
 WHEN event_id='318.0.0.1.2' THEN 'AskAngel'
 WHEN event_id='308.0.0.6.13' THEN 'MostBoughtFund'
