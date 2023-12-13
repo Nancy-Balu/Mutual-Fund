@@ -2,32 +2,32 @@ delete from dbo_wms.funnel_mfcategory where visit_date>=current_date-1;
 insert into dbo_wms.funnel_mfcategory 
 with MF_category as (
     SELECT *,cli_timestamp::date as DDate
-    FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date=current_Date-1 
+    FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date=current_Date-1
+    and all_category <>'Other'
 ),
 orderpad as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('OrderPad') and  cli_timestamp::date=current_Date-1 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('OrderPad') and  cli_timestamp::date=current_Date-1
 ),
 order_summary as(
     SELECT *,cli_timestamp::date as DDate,case
 WHEN event_id='310.0.0.1.21' and dt<='2023-09-04' THEN 'Success'
 WHEN event_id='310.0.0.1.21' and dt>='2023-09-05' and (lower(event_metadata) like '%"status":"success"%')  THEN 'Success'
 ELSE 'OtherStatus' END AS Result
-FROM dbo_wms.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date=current_Date-1  and Result='Success' and TRIM( BOTH '"' from SPLIT_PART(SPLIT_PART(event_metadata, '"investmentType":',2),',',1)) 
-='SIP'
-),
+FROM dbo_wms.MF_Category_Details where category_details in('OrderSummary') and  cli_timestamp::date=current_Date-1 and Result='Success' and TRIM( BOTH '"' from SPLIT_PART(SPLIT_PART(event_metadata, '"investmentType":',2),',',1)) 
+='SIP'),
 DirectPay as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay')  and  cli_timestamp::date=current_Date-1 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay')  and  cli_timestamp::date=current_Date-1
 ),
 ChangePay as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('ChangePay')  and  cli_timestamp::date=current_Date-1 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('ChangePay')  and  cli_timestamp::date=current_Date-1
 ),
 PaymentInitiation as(
-    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay','ChangePay') and  cli_timestamp::date=current_Date-1 
+    SELECT *,cli_timestamp::date as DDate FROM dbo_wms.MF_Category_Details where category_details in('DirectPay','ChangePay') and  cli_timestamp::date=current_Date-1
 ),
-category_final as (
+category_final as(
 SELECT count(distinct client_id) as Distinct_users,cli_timestamp::date as  Visit_Date,All_category AS Category_Name, All_category AS Step_Name ,Category_Details AS CategoryPart_Name,client_type, Age_bucket    
 from dbo_wms.MF_Category_Details
-where category_details in('MF_HomePage','Category') and cli_timestamp::date=current_Date-1 
+where category_details in('MF_HomePage','Category') and cli_timestamp::date=current_Date-1  and all_category <>'Other' and cli_timestamp::date<current_date
 group by 2,3,4,5,6,7
 ),
 
@@ -35,7 +35,7 @@ orderpad_final as (
  select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'orderpad'||'_'||rn as Step_Name,'orderpad' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,ord.client_id as cid,ord.cli_timestamp , cs.client_type, cs.Age_bucket,
-cs.all_category as rn
+cs.all_category  as rn
 from
 MF_Category as cs 
 INNER JOIN
@@ -46,8 +46,8 @@ and cs.DDate=ord.ddate and cs.cli_timestamp<=ord.cli_timestamp
 group by 2,3,4,5,6,7
 ),
 
-
 OrderSummary_final as (
+
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'OrderSummary'||'_'||rn as Step_Name,'OrderSummary' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,ors.client_id as cid,ors.cli_timestamp , cs.client_type, cs.Age_bucket,
@@ -61,10 +61,10 @@ and cs.DDate=ors.ddate and cs.cli_timestamp<=ors.cli_timestamp
 where Result='Success'
 )
 group by 2,3,4,5,6,7
+
 ),
 
 PaymentInit_final as(
-----PaymentInitiation-----
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'PaymentInitiation'||'_'||rn as Step_Name,'PaymentInitiation' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,pi.client_id as cid,pi.cli_timestamp , cs.client_type, cs.Age_bucket,
@@ -79,8 +79,7 @@ and cs.DDate=pi.ddate and cs.cli_timestamp<=pi.cli_timestamp
 group by 2,3,4,5,6,7
 ),
 
-directpay_final as (
------Direct Pay---------
+directpay_final as(
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'b.DirectPay'||'_'||rn as Step_Name,'b.DirectPay' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,dd.client_id as cid,dd.cli_timestamp , cs.client_type, cs.Age_bucket,
@@ -94,8 +93,7 @@ and cs.DDate=dd.ddate and cs.cli_timestamp<=dd.cli_timestamp
 )
 group by 2,3,4,5,6,7
 ),
-changepay_final as(
------ChangePay---------
+changepay_final as (
 select count(distinct client_id) as Distinct_users,DDate as visit_date,rn as Category_Name,'a.ChangePay'||'_'||rn as Step_Name,'a.ChangePay' as CategoryPart_Name,client_type,Age_bucket
 from(
 Select cs.client_id,cs.cli_timestamp,cs.all_category,cs.ddate,cp.client_id as cid,cp.cli_timestamp , cs.client_type, cs.Age_bucket,
@@ -107,8 +105,7 @@ ChangePay as cp
 on cs.client_id=cp.client_id
 and cs.DDate=cp.ddate and cs.cli_timestamp<=cp.cli_timestamp
 )
-group by 2,3,4,5,6,7
-)
+group by 2,3,4,5,6,7)
 
 select * from category_final 
 union ALL
