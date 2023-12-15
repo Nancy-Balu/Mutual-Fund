@@ -8,24 +8,24 @@ mf_event as(
 else '50+' end as Age_bucket
     from dbo_angels.dbo_wms.mf_events a 
     LEFT Join client_data b on a.client_id=b.party_code where event_id IN('309.0.0.1.39','309.0.0.1.43','309.0.0.1.46','309.0.0.1.47')
-    and dt between '2023-07-01' and '2023-11-30'
+    and dt >='2023-07-01'
 ),
 Autopayimp as (
      select distinct client_id,api_timestamp::date as Ddate,event_id,business_channel,tier,platform,Age_bucket from mf_event
-      where event_id='309.0.0.1.39' and dt between '2023-07-01' and '2023-11-30'
+      where event_id='309.0.0.1.39' and dt >='2023-07-01'
 ),
 autopayclick as (
-   select distinct client_id,api_timestamp::date as Ddate,event_id,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.43' and dt between '2023-07-01' and '2023-11-30'
+   select distinct client_id,api_timestamp::date as Ddate,event_id,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.43' and dt >='2023-07-01'
 ),
 proceed as (
-   select distinct client_id,api_timestamp::date as Ddate,event_id,TRIM( BOTH '"' from SPLIT_PART(SPLIT_PART(event_metadata, '"ModeofAutopay":',2),',',1)) as view,api_timestamp::timestamp,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.46' and  dt between '2023-07-01' and '2023-11-30'
+   select distinct client_id,api_timestamp::date as Ddate,event_id,TRIM( BOTH '"' from SPLIT_PART(SPLIT_PART(event_metadata, '"ModeofAutopay":',2),',',1)) as view,api_timestamp::timestamp,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.46' and  dt >='2023-07-01'
 ),
 autopayreg as(
-  select distinct client_id,api_timestamp::date as Ddate,event_id,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.47' and dt between '2023-07-01' and '2023-11-30'
+  select distinct client_id,api_timestamp::date as Ddate,event_id,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.47' and dt >='2023-07-01'
 ),
 autopayreg_split as(
     select distinct b.client_id,b.Ddate,b.event_id,b.business_channel,b.tier,b.platform,b.Age_bucket,COALESCE(a.view,c.bank_code) as view,a.api_timestamp::timestamp,row_number() over(partition by b.client_id,b.ddate order by a.api_timestamp::timestamp desc) as rn from proceed a 
-     right JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id,event_metadata,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.47' and dt between '2023-07-01' and '2023-11-30') b on a.client_id=b.client_id 
+     right JOIN (select distinct client_id,api_timestamp::date as Ddate,event_id,event_metadata,business_channel,tier,platform,Age_bucket from mf_event where event_id='309.0.0.1.47' and dt >='2023-07-01') b on a.client_id=b.client_id 
      left join (select distinct client_code,bank_code from "dbo_angels"."dbo_wms"."mandate_details" where id>0)c on b.client_id=c.client_code
 )
 select date_trunc('month',ddate) as mt,count(distinct client_id) as unique_clients, '01_Autopay_Impression' as view,business_channel,tier,platform,Age_bucket from Autopayimp 
