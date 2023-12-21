@@ -1,4 +1,4 @@
-delete from dbo_angels.dbo_wms.mandate_dau where dt>=current_date-1;
+delete from dbo_angels.dbo_wms.mandate_dau where ddate>=current_date-1;
 insert into dbo_angels.dbo_wms.mandate_dau 
 with client_data as(
     select distinct party_code,business_channel,platform,tier,birthdate,datediff(year,cast(birthdate as date),current_date) as age from "dbo_angels"."product_analytics"."clientkyc_info"
