@@ -1,4 +1,13 @@
-----------Table Name: dbo_wms.MF_Category_Details
+----------Dependent Table Name: dbo.wms.spark_users_EntrypointMF 
+
+insert into dbo.wms.spark_users_EntrypointMF 
+ Select *, 'Spark_Android' as platform from "dbo_angels"."clickstream_internal"."dp_spark_clickstream_data" where dt between '2023-12-23' and '2023-12-24' and event_id in ('11.0.0.1.66', '11.0.0.1.85','5.0.0.40.1','8.0.0.1.56','8.0.0.46.1','11.0.0.3.3','8.0.0.1.50')  
+union all
+select *,'Spark_iOS' as platform from "dbo_angels"."clickstream_internal"."spark_ios_clickstream_data"
+ where dt between '2023-12-23' and '2023-12-24' and  event_id in ('11.0.0.1.66', '11.0.0.1.85','5.0.0.40.1','8.0.0.1.56','8.0.0.46.1','11.0.0.3.3','8.0.0.1.50')
+
+
+----------Dependent Table Name: dbo_wms.MF_Category_Details
 
 delete from dbo_wms.MF_Category_Details where dt between '2023-12-23' and '2023-12-24';
 insert into dbo_wms.MF_Category_Details 
@@ -52,6 +61,7 @@ LEFT JOIN client_kyc kyc on mfc.client_id=kyc.party_code
 
 
 -------------Table Name: dbo_wms.funnel_mfcategory-----------------------------------------------------------------------------------
+insert into dbo_wms.funnel_mfcategory 
 with MF_category as (
     SELECT *,cli_timestamp::date as DDate
     FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date between '2023-12-23' and '2023-12-24'
