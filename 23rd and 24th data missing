@@ -181,7 +181,8 @@ select * from directpay_final
 union all 
 select * from changepay_final
 
----------------------Table Name: 
+---------------------Table Name: dbo_wms.mfentrypoint_dau
+insert into dbo_wms.mfentrypoint_dau
 with stockclickstream as(
 (select client_id,dt,client_timestamp, dt as dt1,'Step1' as steps,'MF_Banner' as stepdetail, case when platform1='Spark_Android' then 'Spark_Android' when platform1='Spark_iOS' then 'Spark_IOS' end  as platform,'s-ExploreMF' as Landing_page  
 from dbo_wms.spark_users_EntrypointMF   where dt between  and event_id in ('11.0.0.1.85')  and ( lower(event_name) like '%mutual%'OR 
