@@ -51,7 +51,7 @@ LEFT JOIN client_kyc kyc on mfc.client_id=kyc.party_code
 
 
 
--------------Table Name: 
+-------------Table Name: dbo_wms.funnel_mfcategory-----------------------------------------------------------------------------------
 with MF_category as (
     SELECT *,cli_timestamp::date as DDate
     FROM dbo_wms.MF_Category_Details where category_details in('Category') and  cli_timestamp::date between '2023-12-23' and '2023-12-24'
