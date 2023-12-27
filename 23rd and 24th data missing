@@ -1,4 +1,4 @@
-Table Name: dbo_wms.MF_Category_Details
+----------Table Name: dbo_wms.MF_Category_Details
 
 delete from dbo_wms.MF_Category_Details where dt between '2023-12-23' and '2023-12-24';
 insert into dbo_wms.MF_Category_Details 
